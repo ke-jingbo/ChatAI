@@ -62,4 +62,4 @@ struct Session {
     Session(const std::string modle_name = "") :_model_name(modle_name) {}
 };
 
-}  // namespace ai_chat_sdk
+}
