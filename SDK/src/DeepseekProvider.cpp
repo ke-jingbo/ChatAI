@@ -142,7 +142,7 @@ namespace ai_chat_sdk {
         std::string request_str = BuildRequestBody(messages, request_params, true);
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
-        client.set_connection_timeout(30, 0);  // 设置超时时间为30秒
+        client.set_connection_timeout(60, 0);  // 设置超时时间为30秒
         client.set_read_timeout(300, 0);        // 设置读取超时时间为120秒
         // 设置请求头
         httplib::Headers headers = {

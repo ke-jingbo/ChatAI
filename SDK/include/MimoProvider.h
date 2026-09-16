@@ -4,7 +4,7 @@
 
 namespace ai_chat_sdk {
     // DeepseekProvider 是一个基于 Mimo 的 LLM 提供者
-    class MimoProvider {
+    class MimoProvider : public LLMProvider {
     protected:
         bool _is_available = false;
         std::string _base_url;

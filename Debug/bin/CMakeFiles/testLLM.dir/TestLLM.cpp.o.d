@@ -269,6 +269,7 @@ CMakeFiles/testLLM.dir/TestLLM.cpp.o: \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/LLMProvider.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/common.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/MimoProvider.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/KimiProvider.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/util/mylog.h \
  /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
  /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \

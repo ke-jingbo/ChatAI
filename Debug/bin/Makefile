@@ -177,6 +177,30 @@ home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp.s
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp.s
 
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.o
+
+# target to build an object file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.o
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.i: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.i
+
+# target to preprocess a source file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.i
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.s: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.s
+
+# target to generate assembly for a file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.s
+
 home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp.o
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.o
 
@@ -240,6 +264,9 @@ help:
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.s"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.o"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.i"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.s"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.s"
