@@ -13,6 +13,7 @@ set(CMAKE_BUILD_TYPE DEBUG)
 # 添加可执行文件
 add_executable(testLLM TestLLM.cpp 
 ../SDK/src/DeepseekProvider.cpp
+../SDK/src/MimoProvider.cpp
 ../SDK/src/util/mylog.cpp)
 
 # 设置输出根目录

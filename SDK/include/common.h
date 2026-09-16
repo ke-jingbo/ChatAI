@@ -3,9 +3,10 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <map>
+#include <functional>
 
 namespace ai_chat_sdk {
-
 // 消息
 struct Message {
     std::string _role;          // 消息的角色
@@ -62,4 +63,9 @@ struct Session {
     Session(const std::string modle_name = "") :_model_name(modle_name) {}
 };
 
-}
+using Messages = std::vector<Message>;
+using Params = std::map<std::string, std::string>;
+// 处理流式信息的回调函数 第一个参数表示消息内容，第二个参数表示是否是最后一条消息
+using StreamCallback = std::function<void(const std::string &message, bool flag)>;
+
+}  // end namespace ai_chat_sdk
