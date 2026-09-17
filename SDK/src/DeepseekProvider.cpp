@@ -97,11 +97,10 @@ namespace ai_chat_sdk {
             ERR("DeepseekProvider::SendMssage() request failed");
             return "";
         }
-        INFO("response status: {}", res->status);
-        INFO("response_str: {}", res->body);
-
         if(res->status != 200) {
             ERR("DeepseekProvider::SendMssage() request failed");
+            ERR("response status: {}", res->status);            
+            ERR("response_str: {}", res->body);
             return "";
         }
 

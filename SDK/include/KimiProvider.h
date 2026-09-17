@@ -15,7 +15,7 @@ namespace ai_chat_sdk {
         virtual bool IsAvailable() override;
         virtual std::string GetModels() override;
         virtual std::string GetDesc() override;
-        std::string BuildRequestBody(Messages messages, Params request_params, bool isstream);
+        virtual std::string BuildRequestBody(Messages messages, Params request_params, bool isstream) override;
         virtual std::string SendMessage(Messages messages, Params request_params) override;
         virtual std::string SendMessageStream(Messages messages, Params request_params, StreamCallback callback) override;                           
     };

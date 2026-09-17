@@ -347,4 +347,5 @@ CMakeFiles/testLLM.dir/TestLLM.cpp.o: \
  /usr/include/spdlog/async_logger-inl.h \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
- /usr/include/spdlog/details/thread_pool-inl.h
+ /usr/include/spdlog/details/thread_pool-inl.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/OllamaLLMProvider.h

@@ -225,6 +225,30 @@ home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp.s
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp.s
 
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.o
+
+# target to build an object file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.o
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.i: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.i
+
+# target to preprocess a source file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.i
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.s: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.s
+
+# target to generate assembly for a file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.s
+
 home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.cpp.o
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.o
 
@@ -270,6 +294,9 @@ help:
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.s"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.o"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.i"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.s"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.s"

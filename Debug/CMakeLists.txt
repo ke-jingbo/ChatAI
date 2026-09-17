@@ -15,7 +15,8 @@ add_executable(testLLM TestLLM.cpp
 ../SDK/src/DeepseekProvider.cpp
 ../SDK/src/MimoProvider.cpp
 ../SDK/src/util/mylog.cpp
-../SDK/src/KimiProvider.cpp)
+../SDK/src/KimiProvider.cpp
+../SDK/src/OllamaLLMProvider.cpp)
 
 # 设置输出根目录
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

@@ -15,7 +15,7 @@ namespace ai_chat_sdk {
         virtual bool IsAvailable();
         virtual std::string GetModels();
         virtual std::string GetDesc();
-        std::string BuildRequestBody(Messages messages, Params request_params, bool isstream);
+        virtual std::string BuildRequestBody(Messages messages, Params request_params, bool isstream);
         virtual std::string SendMessage(Messages messages, Params request_params);
         virtual std::string SendMessageStream(Messages messages, Params request_params, StreamCallback callback);                           
     };

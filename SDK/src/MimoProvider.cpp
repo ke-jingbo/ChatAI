@@ -96,11 +96,10 @@ namespace ai_chat_sdk {
             ERR("MimoProvider::SendMessage() request failed");
             return "";
         }
-        DBG("response status: {}", res->status);
-        DBG("response_str: {}", res->body);
-
         if(res->status != 200) {
             ERR("MimoProvider::SendMessage() request failed");
+            ERR("response status: {}", res->status);
+            ERR("response_str: {}", res->body);
             return "";
         }
 

@@ -70,7 +70,7 @@ namespace ai_chat_sdk {
         builder["indentation"] = "";
         std::string request_str;
         request_str = Json::writeString(builder, request_obj);
-        INFO("request_str: {}", request_str);
+        DBG("request_str: {}", request_str);
         return request_str;
     }
 
@@ -98,11 +98,10 @@ namespace ai_chat_sdk {
             ERR("KimiProvider::SendMssage() request failed");
             return "";
         }
-        INFO("response status: {}", res->status);
-        INFO("response_str: {}", res->body);
-
         if(res->status != 200) {
             ERR("KimiProvider::SendMssage() request failed");
+            ERR("response status: {}", res->status);
+            ERR("response_str: {}", res->body);
             return "";
         }
 
