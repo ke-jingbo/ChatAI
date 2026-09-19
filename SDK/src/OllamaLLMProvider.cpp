@@ -5,10 +5,10 @@
 
 namespace ai_chat_sdk {
     // 初始化接口
-    bool OllamaLLMProvider::InitProvider(Params &request_params) {
+    bool OllamaLLMProvider::InitProvider(Params &provider_config) {
         // 查找模型名称
-        auto model_name = request_params.find("model_name");
-        if(model_name != request_params.end()) {
+        auto model_name = provider_config.find("model_name");
+        if(model_name != provider_config.end()) {
             _model_name = model_name->second;
         }
         else{
@@ -16,8 +16,8 @@ namespace ai_chat_sdk {
             return false;
         }
         // 查找模型描述
-        auto model_desc = request_params.find("model_desc");
-        if(model_desc != request_params.end()) {
+        auto model_desc = provider_config.find("model_desc");
+        if(model_desc != provider_config.end()) {
             _model_desc = model_desc->second;
         }
         else{
@@ -25,8 +25,8 @@ namespace ai_chat_sdk {
             return false;
         }
         // 查找base_url
-        auto base_url = request_params.find("base_url");
-        if(base_url != request_params.end()) {
+        auto base_url = provider_config.find("base_url");
+        if(base_url != provider_config.end()) {
             _base_url = base_url->second;
         }
         else{
@@ -40,15 +40,19 @@ namespace ai_chat_sdk {
 
     // Get接口
     bool OllamaLLMProvider::IsAvailable() {return _is_available;}
-    std::string OllamaLLMProvider::GetModels() {return _model_name;}
+    std::string OllamaLLMProvider::GetProviderName() {return "OllamaLLMProvider";}
     std::string OllamaLLMProvider::GetDesc() {return _model_desc;}
 
-    std::string OllamaLLMProvider::BuildRequestBody(Messages messages, Params request_params, bool isstream) {
+    std::string OllamaLLMProvider::BuildRequestBody(Model model, Messages messages, Params request_params, bool isstream) {
         // 1. 读取请求参数
         // think keep_alive
         std::string keep_alive = "5m";
         double temperature = 1.0;
+        int max_tokens = 2048;
         bool think = true;
+        if(request_params.find("max_tokens") != request_params.end()) {
+            max_tokens = std::stoi(request_params["max_tokens"]);
+        }
         if(request_params.find("temperature") != request_params.end()) {
             temperature = std::stod(request_params["temperature"]);
         }
@@ -71,6 +75,7 @@ namespace ai_chat_sdk {
         request_obj["think"] = think;
         Json::Value options_obj;
         options_obj["temperature"] = temperature;
+        options_obj["num_ctx"] = max_tokens;
         request_obj["options"] = options_obj;
         request_obj["stream"] = isstream;
         // 4. 序列化请求参数
@@ -82,14 +87,14 @@ namespace ai_chat_sdk {
         return request_str;
     }
 
-    std::string OllamaLLMProvider::SendMessage(Messages messages, Params request_params) {
+    std::string OllamaLLMProvider::SendMessage(Model model, Messages messages, Params request_params) {
         // 1. 先检测模型是否可用
         if(!_is_available) {
             ERR("OllamaLLMProvider::SendMessage() provider is not available");
             return "";
         }
         // 2. 构建请求正文
-        std::string request_str = BuildRequestBody(messages, request_params, false);
+        std::string request_str = BuildRequestBody(model, messages, request_params, false);
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
         client.set_connection_timeout(10, 0);  // 设置超时时间为10秒
@@ -137,14 +142,14 @@ namespace ai_chat_sdk {
         return "";
     }
 
-    std::string OllamaLLMProvider::SendMessageStream(Messages messages, Params request_params, StreamCallback callback) {
+    std::string OllamaLLMProvider::SendMessageStream(Model model, Messages messages, Params request_params, StreamCallback callback) {
         // 1. 判断模型是否可用
         if(!_is_available) {
             ERR("OllamaLLMProvider::SendMessageStream() provider is not available");
             return "";
         }
         // 2. 构建请求正文
-        std::string request_str = BuildRequestBody(messages, request_params, true);
+        std::string request_str = BuildRequestBody(model, messages, request_params, true);
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
         client.set_connection_timeout(60, 0);  // 设置超时时间为30秒
@@ -200,6 +205,7 @@ namespace ai_chat_sdk {
                     return false;
                 }
                 if(root.isMember("message") && root["message"].isMember("content")) {
+                    // Thinking 与 content 的解耦 TODO
                     if(root["message"].isMember("thinking")) {
                         std::string think = root["message"]["thinking"].asString();
                         full_response += think;

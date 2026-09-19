@@ -16,7 +16,8 @@ add_executable(testLLM TestLLM.cpp
 ../SDK/src/MimoProvider.cpp
 ../SDK/src/util/mylog.cpp
 ../SDK/src/KimiProvider.cpp
-../SDK/src/OllamaLLMProvider.cpp)
+../SDK/src/OllamaLLMProvider.cpp
+../SDK/src/LLMManager.cpp)
 
 # 设置输出根目录
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -30,4 +31,4 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 target_compile_definitions(testLLM PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
 
 # 链接库
-target_link_libraries(testLLM jsoncpp fmt spdlog gtest OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(testLLM jsoncpp fmt spdlog gtest sqlite3 OpenSSL::SSL OpenSSL::Crypto)

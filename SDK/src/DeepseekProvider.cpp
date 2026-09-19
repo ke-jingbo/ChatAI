@@ -5,10 +5,10 @@
 
 namespace ai_chat_sdk {
     // 初始化接口
-    bool DeepseekProvider::InitProvider(Params &request_params) {
+    bool DeepseekProvider::InitProvider(Params &provider_config) {
         // 查找api_key
-        auto api_key = request_params.find("api_key");
-        if(api_key != request_params.end()) {
+        auto api_key = provider_config.find("api_key");
+        if(api_key != provider_config.end()) {
             _api_key = api_key->second;
         }
         else{
@@ -16,8 +16,8 @@ namespace ai_chat_sdk {
             return false;
         }
         // 查找base_url
-        auto base_url = request_params.find("base_url");
-        if(base_url != request_params.end()) {
+        auto base_url = provider_config.find("base_url");
+        if(base_url != provider_config.end()) {
             _base_url = base_url->second;
         }
         else{
@@ -32,13 +32,13 @@ namespace ai_chat_sdk {
 
     // Get接口
     bool DeepseekProvider::IsAvailable() {return _is_available;}
-    std::string DeepseekProvider::GetModels() {return "deepseek-flash";}
+    std::string DeepseekProvider::GetProviderName() {return "DeepseekProvider";}
     std::string DeepseekProvider::GetDesc() {
-        return "DeepSeek 的轻量版快速版模型。响应速度更快、推理成本更低，适合处理日常、高频的对话任务";
+        return "DeepSeek 的轻量版快速版模型。响应速度更快、推理成本更低，适合处理日常、高频的对话任务。";
     }
 
 
-    std::string DeepseekProvider::BuildRequestBody(Messages messages, Params request_params, bool isstream) {
+    std::string DeepseekProvider::BuildRequestBody(Model model, Messages messages, Params request_params, bool isstream) {
         // 1. 读取请求参数
         // 如果有温度和最大token数，则使用指定的参数 否则使用默认值
         double temperature = 0.8;
@@ -59,7 +59,7 @@ namespace ai_chat_sdk {
         }
         // 3. 构建Json请求参数
         Json::Value request_obj;
-        request_obj["model"] = "deepseek-flash";
+        request_obj["model"] = model._name;
         request_obj["messages"] = message_array;
         request_obj["temperature"] = temperature;
         request_obj["max_tokens"] = max_tokens;
@@ -74,14 +74,14 @@ namespace ai_chat_sdk {
     }
 
 
-    std::string DeepseekProvider::SendMessage(Messages messages, Params request_params) {
+    std::string DeepseekProvider::SendMessage(Model model, Messages messages, Params request_params) {
         // 1. 先检测模型是否可用
         if(!_is_available) {
             ERR("DeepseekProvider::SendMssage() provider is not available");
             return "";
         }
         // 2. 构建请求正文
-        std::string request_str = BuildRequestBody(messages, request_params, false);
+        std::string request_str = BuildRequestBody(model, messages, request_params, false);
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
         client.set_connection_timeout(10, 0);  // 设置超时时间为10秒
@@ -131,14 +131,14 @@ namespace ai_chat_sdk {
     }
 
 
-    std::string DeepseekProvider::SendMessageStream(Messages messages, Params request_params, StreamCallback callback) {
+    std::string DeepseekProvider::SendMessageStream(Model model, Messages messages, Params request_params, StreamCallback callback) {
         // 1. 判断模型是否可用
         if(!_is_available) {
             ERR("DeepseekProvider::SendMessageStream() provider is not available");
             return "";
         }
         // 2. 构建请求正文
-        std::string request_str = BuildRequestBody(messages, request_params, true);
+        std::string request_str = BuildRequestBody(model, messages, request_params, true);
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
         client.set_connection_timeout(60, 0);  // 设置超时时间为30秒

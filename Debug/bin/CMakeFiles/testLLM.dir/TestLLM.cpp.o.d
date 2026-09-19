@@ -267,7 +267,7 @@ CMakeFiles/testLLM.dir/TestLLM.cpp.o: \
  /usr/include/gtest/gtest_pred_impl.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/DeepseekProvider.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/LLMProvider.h \
- /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/common.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/Common.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/MimoProvider.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/KimiProvider.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/util/mylog.h \
@@ -348,4 +348,5 @@ CMakeFiles/testLLM.dir/TestLLM.cpp.o: \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
  /usr/include/spdlog/details/thread_pool-inl.h \
- /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/OllamaLLMProvider.h
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/OllamaLLMProvider.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/LLMManager.h

@@ -5,10 +5,10 @@
 
 namespace ai_chat_sdk {
     // 初始化接口
-    bool KimiProvider::InitProvider(Params &request_params) {
+    bool KimiProvider::InitProvider(Params &provider_config) {
         // 查找api_key
-        auto api_key = request_params.find("api_key");
-        if(api_key != request_params.end()) {
+        auto api_key = provider_config.find("api_key");
+        if(api_key != provider_config.end()) {
             _api_key = api_key->second;
         }
         else{
@@ -16,8 +16,8 @@ namespace ai_chat_sdk {
             return false;
         }
         // 查找base_url
-        auto base_url = request_params.find("base_url");
-        if(base_url != request_params.end()) {
+        auto base_url = provider_config.find("base_url");
+        if(base_url != provider_config.end()) {
             _base_url = base_url->second;
         }
         else{
@@ -29,16 +29,15 @@ namespace ai_chat_sdk {
         return true;
     }
 
-
     // Get接口
     bool KimiProvider::IsAvailable() {return _is_available;}
-    std::string KimiProvider::GetModels() {return "kimi-k3";}
+    std::string KimiProvider::GetProviderName() {return "KimiProvider";}
     std::string KimiProvider::GetDesc() {
-        return "由月之暗面(Moonshot AI)开发的 AI 助手，擅长问答、写作、编程和多语言任务";
+        return "KimiProvider 是一个基于 Kimi 的 LLM 提供者";
     }
 
 
-    std::string KimiProvider::BuildRequestBody(Messages messages, Params request_params, bool isstream) {
+    std::string KimiProvider::BuildRequestBody(Model model, Messages messages, Params request_params, bool isstream) {
         // 1. 读取请求参数
         // 如果有最大token数，则使用指定的参数 否则使用默认值
         int max_tokens = 2048;
@@ -60,7 +59,7 @@ namespace ai_chat_sdk {
         // 3. 构建Json请求参数
         // reasoning_effort TODO
         Json::Value request_obj;
-        request_obj["model"] = "kimi-k3";
+        request_obj["model"] = model._name;
         request_obj["messages"] = message_array;
         request_obj["max_completion_tokens"] = max_tokens;
         request_obj["stream"] = isstream;
@@ -75,14 +74,14 @@ namespace ai_chat_sdk {
     }
 
 
-    std::string KimiProvider::SendMessage(Messages messages, Params request_params) {
+    std::string KimiProvider::SendMessage(Model model, Messages messages, Params request_params) {
         // 1. 先检测模型是否可用
         if(!_is_available) {
             ERR("KimiProvider::SendMssage() provider is not available");
             return "";
         }
         // 2. 构建请求正文
-        std::string request_str = BuildRequestBody(messages, request_params, false);
+        std::string request_str = BuildRequestBody(model, messages, request_params, false);
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
         client.set_connection_timeout(10, 0);  // 设置超时时间为10秒
@@ -131,14 +130,14 @@ namespace ai_chat_sdk {
         return "";
     }
 
-    std::string KimiProvider::SendMessageStream(Messages messages, Params request_params, StreamCallback callback) {
+    std::string KimiProvider::SendMessageStream(Model model, Messages messages, Params request_params, StreamCallback callback) {
         // 1. 判断模型是否可用
         if(!_is_available) {
             ERR("KimiProvider::SendMessageStream() provider is not available");
             return "";
         }
         // 2. 构建请求正文
-        std::string request_str = BuildRequestBody(messages, request_params, true);
+        std::string request_str = BuildRequestBody(model, messages, request_params, true);
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
         client.set_connection_timeout(60, 0);  // 设置超时时间为30秒

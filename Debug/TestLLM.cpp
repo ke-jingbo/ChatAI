@@ -4,6 +4,7 @@
 #include "../SDK/include/KimiProvider.h"
 #include "../SDK/include/util/mylog.h"
 #include "../SDK/include/OllamaLLMProvider.h"
+#include "../SDK/include/LLMManager.h"
 #include <unistd.h>
 
 // TEST(DeepseekProvider, TestSendMssage) {
@@ -81,15 +82,50 @@
 //     std::cout << std::endl;
 // }
 
-TEST(OllamaLLMProvider, TestSendMssage) {
-    std::map<std::string, std::string> model_params;
-    model_params["model_name"] = "qwen3:0.6b";
-    model_params["model_desc"] = "这是一个测试模型";
-    model_params["base_url"] = "http://127.0.0.1:11434";
+// TEST(OllamaLLMProvider, TestSendMssage) {
+//     std::map<std::string, std::string> model_params;
+//     model_params["model_name"] = "qwen3:0.6b";
+//     model_params["model_desc"] = "这是一个测试模型";
+//     model_params["base_url"] = "http://127.0.0.1:11434";
 
+//     std::unique_ptr<ai_chat_sdk::LLMProvider> provider(new ai_chat_sdk::OllamaLLMProvider());
+//     provider->InitProvider(model_params);
+//     ASSERT_TRUE(provider->IsAvailable());
+//     std::string content;
+//     std::cout << "Enter# ";
+//     std::cin >> content;
+//     ai_chat_sdk::Message message("user", content);
+//     std::vector<ai_chat_sdk::Message> messages;
+//     messages.push_back(message);
+//     auto func = [](const std::string &message, bool flag) {
+//         if(message.empty()) return;
+//         std::cout << message << std::flush;
+//         // INFO("{}", message);
+//     };
+//     std::map<std::string, std::string> request_params;
+//     request_params["think"] = "true";
+//     request_params["temperature"] = "0.8";
+//     auto res = provider->SendMessageStream(messages, request_params, func);
+//     ASSERT_FALSE(res.empty());
+//     // INFO("res: {}", res);
+//     std::cout << std::endl;
+// }
+
+TEST(LLMManager, TestRegisterProvider) {
     std::unique_ptr<ai_chat_sdk::LLMProvider> provider(new ai_chat_sdk::OllamaLLMProvider());
-    provider->InitProvider(model_params);
-    ASSERT_TRUE(provider->IsAvailable());
+    ai_chat_sdk::LLMManager manager;
+    ASSERT_TRUE(manager.RegisterProvider(provider));
+    // 测试初始化提供者
+    ai_chat_sdk::Params provider_config;
+    provider_config["model_name"] = "qwen3:0.6b";
+    provider_config["model_desc"] = "这是一个测试模型";
+    provider_config["base_url"] = "http://127.0.0.1:11434";
+    manager.InitProvider("OllamaLLMProvider", provider_config);
+    ASSERT_TRUE(manager.IsProviderAvailable("OllamaLLMProvider"));
+    // 测试初始化模型
+    ai_chat_sdk::Model model("qwen3:0.6b", "http://127.0.0.1:11434", "OllamaLLMProvider");
+    manager.RegisterModel(model);
+    manager.InitModel("qwen3:0.6b");
     std::string content;
     std::cout << "Enter# ";
     std::cin >> content;
@@ -102,12 +138,11 @@ TEST(OllamaLLMProvider, TestSendMssage) {
         // INFO("{}", message);
     };
     std::map<std::string, std::string> request_params;
-    request_params["think"] = "true";
-    request_params["temperature"] = "0.8";
-    auto res = provider->SendMessageStream(messages, request_params, func);
-    ASSERT_FALSE(res.empty());
-    // INFO("res: {}", res);
+    request_params["temperature"] = "1.2";
+    request_params["max_tokens"] = "2048";
+    auto res = manager.SendMessageStream(model, messages, request_params, func);
     std::cout << std::endl;
+    ASSERT_FALSE(res.empty());
 }
 
 

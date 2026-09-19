@@ -11,12 +11,12 @@ namespace ai_chat_sdk {
         std::string _api_key;
 
     public:
-        virtual bool InitProvider(Params &model_config) override;
+        virtual bool InitProvider(Params &provider_config) override;
         virtual bool IsAvailable() override;
-        virtual std::string GetModels() override;
+        virtual std::string GetProviderName() override;
         virtual std::string GetDesc() override;
-        virtual std::string BuildRequestBody(Messages messages, Params request_params, bool isstream) override;
-        virtual std::string SendMessage(Messages messages, Params request_params) override;
-        virtual std::string SendMessageStream(Messages messages, Params request_params, StreamCallback callback) override;                           
+        virtual std::string BuildRequestBody(Model model, Messages messages, Params request_params, bool isstream) override;
+        virtual std::string SendMessage(Model model, Messages messages, Params request_params) override;
+        virtual std::string SendMessageStream(Model model, Messages messages, Params request_params, StreamCallback callback) override;
     };
 }

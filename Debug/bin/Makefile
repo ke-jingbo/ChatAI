@@ -201,6 +201,30 @@ home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.s
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.s
 
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.o
+
+# target to build an object file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.o
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.i: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.i
+
+# target to preprocess a source file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.i
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.s: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.s
+
+# target to generate assembly for a file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.s
+
 home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp.o
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.o
 
@@ -291,6 +315,9 @@ help:
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.s"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.o"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.i"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.s"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.s"
