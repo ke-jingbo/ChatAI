@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <mutex>
 #include <atomic>
+#include "DataManager.h"
 
 namespace ai_chat_sdk {
 
@@ -13,6 +14,7 @@ namespace ai_chat_sdk {
         std::unordered_map<std::string, std::shared_ptr<Session>> _sessions;  // 会话列表
         std::mutex _mutex;                                                    // 会话列表锁              
         std::atomic<int64_t> _session_counter = {0};                       // 会话计数器
+        DataManager _data_manager;                                           // 数据库管理器
 
     private:
         // 创建会话id
@@ -21,6 +23,7 @@ namespace ai_chat_sdk {
         std::string CreateMessageId(size_t message_count);
 
     public:
+        SessionManager(std::string dbName);
         // 创建会话
         std::string CreateSession(const std::string &model_name);
         // 删除会话
