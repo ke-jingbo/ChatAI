@@ -46,7 +46,7 @@ namespace ai_chat_sdk {
         if(request_params.find("temperature") != request_params.end()) {
             temperature = std::stod(request_params["temperature"]);
         }
-        if(request_params.find("max_completion_tokens") != request_params.end()) {
+        if(request_params.find("max_tokens") != request_params.end()) {
             max_tokens = std::stoi(request_params["max_tokens"]);
         }
         // 2. 构建Json历史消息

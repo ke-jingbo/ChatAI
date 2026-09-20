@@ -349,4 +349,8 @@ CMakeFiles/testLLM.dir/TestLLM.cpp.o: \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
  /usr/include/spdlog/details/thread_pool-inl.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/OllamaLLMProvider.h \
- /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/LLMManager.h
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/LLMManager.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/ChatSDK.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/SessionManager.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/Debug/../SDK/include/DataManager.h \
+ /usr/include/sqlite3.h

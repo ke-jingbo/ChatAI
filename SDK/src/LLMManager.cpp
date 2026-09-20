@@ -3,7 +3,7 @@
 
 namespace ai_chat_sdk {
     // 注册提供者/模型
-    bool LLMManager::RegisterProvider(std::unique_ptr<LLMProvider> &provider) {
+    bool LLMManager::RegisterProvider(std::unique_ptr<LLMProvider> provider) {
         assert(_providers.find(provider->GetProviderName()) == _providers.end());  // 检查提供者名称是否已注册
         if(!provider) {
             ERR("LLMManager::RegisterProvider() provider is nullptr");
@@ -72,6 +72,14 @@ namespace ai_chat_sdk {
             if(p.second._is_active) models.push_back(p.second);
         }
         return models;
+    }
+    // 获取指定可用模型
+    Model LLMManager::GetModel(const std::string &model_name) {
+        if(_models.find(model_name) == _models.end()) {
+            ERR("LLMManager::GetModel() model not found: {}", model_name);
+            return Model();
+        }
+        return _models[model_name];
     }
 
     // 发送消息

@@ -37,7 +37,7 @@ namespace ai_chat_sdk {
         std::string sql = R"(
             create table if not exists sessions (
             session_id text primary key,
-            modle_name text not null,
+            model_name text not null,
             start_time integer not null,
             update_time integer not null
             );
@@ -49,9 +49,9 @@ namespace ai_chat_sdk {
             message_id text primary key,
             role text not null,
             content text not null,
-            timestamp integer not null,
+            msg_timestamp integer not null,
             session_id text not null,
-            foregin key (session_id) references sessions(session_id) on delete cascade
+            foreign key (session_id) references sessions(session_id) on delete cascade
             );
         )";
         if(!SqlExec(sql.c_str())) return false;
@@ -99,9 +99,9 @@ namespace ai_chat_sdk {
             sqlite3_finalize(stmt);
             return nullptr;
         }
-        std::string model_name = std::string((const char *)sqlite3_column_text(stmt, 1));
-        int64_t start_time = sqlite3_column_int64(stmt, 2);
-        int64_t update_time = sqlite3_column_int64(stmt, 3);
+        std::string model_name = std::string((const char *)sqlite3_column_text(stmt, 0));
+        int64_t start_time = sqlite3_column_int64(stmt, 1);
+        int64_t update_time = sqlite3_column_int64(stmt, 2);
         std::shared_ptr<Session> session = std::make_shared<Session>(model_name);
         session->_session_id = session_id;
         session->_start_time = static_cast<std::time_t>(start_time);
@@ -195,7 +195,7 @@ namespace ai_chat_sdk {
 
     std::vector<std::shared_ptr<Session>> DataManager::QueryAllSession() {
         std::lock_guard<std::mutex> lock(_mutex);
-        const char *sql = R"(select * from sessions order by updata_time desc)";
+        const char *sql = R"(select * from sessions order by update_time desc)";
         sqlite3_stmt *stmt;
         int rc = sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr);
         if(rc != SQLITE_OK) {
@@ -228,7 +228,7 @@ namespace ai_chat_sdk {
         }
         int count = 0;
         rc = sqlite3_step(stmt);
-        if(rc != SQLITE_DONE || rc != SQLITE_ROW) {
+        if(rc != SQLITE_DONE && rc != SQLITE_ROW) {
             ERR("SessionCount error: {}", sqlite3_errmsg(_db));
             sqlite3_finalize(stmt);
             return 0;
@@ -265,7 +265,7 @@ namespace ai_chat_sdk {
 
     std::vector<Message> DataManager::QueryMessage(std::string session_id) {
         std::lock_guard<std::mutex> lock(_mutex);
-        const char *sql = R"(select role, content, timestamp, message_id from messages where session_id = ? order by timestamp desc)";
+        const char *sql = R"(select role, content, msg_timestamp, message_id from messages where session_id = ? order by msg_timestamp desc)";
         sqlite3_stmt *stmt;
         int rc = sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr);
         if(rc != SQLITE_OK) {
@@ -277,10 +277,10 @@ namespace ai_chat_sdk {
         std::vector<Message> messages;
         while(sqlite3_step(stmt) == SQLITE_ROW) {
             Message message;
-            message._role = std::string((const char *)sqlite3_column_text(stmt, 1));
-            message._content = std::string((const char *)sqlite3_column_text(stmt, 2));
-            message._timestamp = sqlite3_column_int64(stmt, 3);
-            message._messageid = std::string((const char *)sqlite3_column_text(stmt, 4));
+            message._role = std::string((const char *)sqlite3_column_text(stmt, 0));
+            message._content = std::string((const char *)sqlite3_column_text(stmt, 1));
+            message._timestamp = sqlite3_column_int64(stmt, 2);
+            message._messageid = std::string((const char *)sqlite3_column_text(stmt, 3));
             messages.emplace_back(message);
         }
         rc = sqlite3_finalize(stmt);
@@ -304,6 +304,28 @@ namespace ai_chat_sdk {
         }
         rc = sqlite3_finalize(stmt);
         return true;
+    }
+
+    int DataManager::MessageCount(std::string session_id) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        const char *sql = R"(select count(*) from messages where session_id = ?)";
+        sqlite3_stmt *stmt;
+        int rc = sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr);
+        if(rc != SQLITE_OK) {
+            ERR("MessageCount error: {}", sqlite3_errmsg(_db));
+            sqlite3_finalize(stmt);
+            return 0;
+        }
+        sqlite3_bind_text(stmt, 1, session_id.c_str(), -1, SQLITE_TRANSIENT);
+        rc = sqlite3_step(stmt);
+        if(rc != SQLITE_DONE && rc != SQLITE_ROW) {
+            ERR("MessageCount error: {}", sqlite3_errmsg(_db));
+            sqlite3_finalize(stmt);
+            return 0;
+        }
+        int count = sqlite3_column_int(stmt, 0);
+        rc = sqlite3_finalize(stmt);
+        return count;
     }
 
 }  // end namespace ai_chat_sdk

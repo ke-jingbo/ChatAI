@@ -20,7 +20,7 @@ namespace ai_chat_sdk {
         // 创建会话id
         std::string CreateSessionId();
         // 创建消息id
-        std::string CreateMessageId(size_t message_count);
+        std::string CreateMessageId(std::string session_id);
 
     public:
         SessionManager(std::string dbName);

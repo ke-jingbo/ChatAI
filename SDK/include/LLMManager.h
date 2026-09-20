@@ -12,7 +12,7 @@ namespace ai_chat_sdk {
         std::map<std::string, Model> _models;                            // 模型列表
     public:
         // 注册提供者/模型
-        bool RegisterProvider(std::unique_ptr<LLMProvider> &provider);
+        bool RegisterProvider(std::unique_ptr<LLMProvider> provider);
         bool RegisterModel(Model model_name);
         // 初始化提供者
         bool InitProvider(const std::string &provider_name, Params &model_config);
@@ -22,9 +22,11 @@ namespace ai_chat_sdk {
         bool IsModelAvailable(const std::string &model_name);
         // 获取可用模型列表
         std::vector<Model> GetInitModels();
+        // 获取指定可用模型
+        Model GetModel(const std::string &model_name);
         // 发送消息
-        std::string SendMessage(Model model_name, Messages messages, Params request_params);
+        std::string SendMessage(Model model, Messages messages, Params request_params);
         // 流式发送消息
-        std::string SendMessageStream(Model model_name, Messages messages, Params request_params, StreamCallback callback);
+        std::string SendMessageStream(Model model, Messages messages, Params request_params, StreamCallback callback);
     };
 }

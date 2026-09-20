@@ -9,11 +9,14 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/kjb/Code/ChatAI-SDK/ChatAI/Debug/TestLLM.cpp" "CMakeFiles/testLLM.dir/TestLLM.cpp.o" "gcc" "CMakeFiles/testLLM.dir/TestLLM.cpp.o.d"
+  "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.o.d"
+  "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.o.d"
   "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp.o.d"
   "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp.o.d"
   "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/LLMManager.cpp.o.d"
   "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp.o.d"
   "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.o.d"
+  "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.o.d"
   "/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.cpp" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.cpp.o" "gcc" "CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.cpp.o.d"
   )
 

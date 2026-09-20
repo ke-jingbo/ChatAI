@@ -5,6 +5,7 @@
 #include "../SDK/include/util/mylog.h"
 #include "../SDK/include/OllamaLLMProvider.h"
 #include "../SDK/include/LLMManager.h"
+#include "../SDK/include/ChatSDK.h"
 #include <unistd.h>
 
 // TEST(DeepseekProvider, TestSendMssage) {
@@ -111,40 +112,113 @@
 //     std::cout << std::endl;
 // }
 
-TEST(LLMManager, TestRegisterProvider) {
-    std::unique_ptr<ai_chat_sdk::LLMProvider> provider(new ai_chat_sdk::OllamaLLMProvider());
-    ai_chat_sdk::LLMManager manager;
-    ASSERT_TRUE(manager.RegisterProvider(provider));
-    // 测试初始化提供者
-    ai_chat_sdk::Params provider_config;
-    provider_config["model_name"] = "qwen3:0.6b";
-    provider_config["model_desc"] = "这是一个测试模型";
-    provider_config["base_url"] = "http://127.0.0.1:11434";
-    manager.InitProvider("OllamaLLMProvider", provider_config);
-    ASSERT_TRUE(manager.IsProviderAvailable("OllamaLLMProvider"));
-    // 测试初始化模型
-    ai_chat_sdk::Model model("qwen3:0.6b", "http://127.0.0.1:11434", "OllamaLLMProvider");
-    manager.RegisterModel(model);
-    manager.InitModel("qwen3:0.6b");
-    std::string content;
-    std::cout << "Enter# ";
-    std::cin >> content;
-    ai_chat_sdk::Message message("user", content);
-    std::vector<ai_chat_sdk::Message> messages;
-    messages.push_back(message);
-    auto func = [](const std::string &message, bool flag) {
-        if(message.empty()) return;
-        std::cout << message << std::flush;
-        // INFO("{}", message);
-    };
-    std::map<std::string, std::string> request_params;
-    request_params["temperature"] = "1.2";
-    request_params["max_tokens"] = "2048";
-    auto res = manager.SendMessageStream(model, messages, request_params, func);
-    std::cout << std::endl;
-    ASSERT_FALSE(res.empty());
-}
+// TEST(LLMManager, TestRegisterProvider) {
+//     std::unique_ptr<ai_chat_sdk::LLMProvider> provider(new ai_chat_sdk::OllamaLLMProvider());
+//     ai_chat_sdk::LLMManager manager;
+//     ASSERT_TRUE(manager.RegisterProvider(provider));
+//     // 测试初始化提供者
+//     ai_chat_sdk::Params provider_config;
+//     provider_config["model_name"] = "qwen3:0.6b";
+//     provider_config["model_desc"] = "这是一个测试模型";
+//     provider_config["base_url"] = "http://127.0.0.1:11434";
+//     manager.InitProvider("OllamaLLMProvider", provider_config);
+//     ASSERT_TRUE(manager.IsProviderAvailable("OllamaLLMProvider"));
+//     // 测试初始化模型
+//     ai_chat_sdk::Model model("qwen3:0.6b", "http://127.0.0.1:11434", "OllamaLLMProvider");
+//     manager.RegisterModel(model);
+//     manager.InitModel("qwen3:0.6b");
+//     std::string content;
+//     std::cout << "Enter# ";
+//     std::cin >> content;
+//     ai_chat_sdk::Message message("user", content);
+//     std::vector<ai_chat_sdk::Message> messages;
+//     messages.push_back(message);
+//     auto func = [](const std::string &message, bool flag) {
+//         if(message.empty()) return;
+//         std::cout << message << std::flush;
+//         // INFO("{}", message);
+//     };
+//     std::map<std::string, std::string> request_params;
+//     request_params["temperature"] = "1.2";
+//     request_params["max_tokens"] = "2048";
+//     auto res = manager.SendMessageStream(model, messages, request_params, func);
+//     std::cout << std::endl;
+//     ASSERT_FALSE(res.empty());
+// }
 
+
+TEST(ChatSDK, TestSendMssage) {
+    std::unique_ptr<ai_chat_sdk::ChatSDK> sdk(new ai_chat_sdk::ChatSDK());
+    ai_chat_sdk::ProviderConfigs provider_configs;
+    std::shared_ptr<ai_chat_sdk::ProviderConfig> deepseek_provider_config(
+        new ai_chat_sdk::APIConfig("DeepseekProvider", std::getenv("deepseek_apikey")));
+    std::shared_ptr<ai_chat_sdk::ProviderConfig> mimo_provider_config(
+        new ai_chat_sdk::APIConfig("MimoProvider", std::getenv("mimo_apikey")));
+    std::shared_ptr<ai_chat_sdk::ProviderConfig> kimi_provider_config(
+        new ai_chat_sdk::APIConfig("KimiProvider", std::getenv("kimi_apikey")));
+    std::shared_ptr<ai_chat_sdk::ProviderConfig> ollama_provider_config(
+        new ai_chat_sdk::LocalConfig("OllamaLLMProvider", "qwen3:0.6b", "http://127.0.0.1:11434"));
+    provider_configs.push_back(deepseek_provider_config);
+    provider_configs.push_back(mimo_provider_config);
+    provider_configs.push_back(kimi_provider_config);
+    provider_configs.push_back(ollama_provider_config);
+    ai_chat_sdk::Models models;
+    ai_chat_sdk::Model deepseek_model("deepseek-flash", "DeepseekProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
+    ai_chat_sdk::Model mimo_model("mimo-v2.5-pro", "MimoProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
+    ai_chat_sdk::Model kimi_model("kimi-k3", "KimiProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
+    ai_chat_sdk::Model qwen3_model("qwen3:0.6b", "OllamaLLMProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
+    models.push_back(deepseek_model);
+    models.push_back(mimo_model);
+    models.push_back(kimi_model);
+    models.push_back(qwen3_model);
+    ASSERT_TRUE(sdk->InitLLMManager(provider_configs, models));
+    std::string session_id = sdk->CreateSession("deepseek-flash");
+    do {
+        int op = 0;
+        std::cout << "-----------------------请输入操作：----------------------" << std::endl;
+        std::cout << "1. 发送消息" << std::endl;
+        std::cout << "2. 发送消息流式" << std::endl;
+        std::cout << "3. 更新会话模型" << std::endl;
+        std::cout << "0. 退出" << std::endl;
+        std::cout << "--------------------------------------------------------" << std::endl;
+        std::cout << "Enter# ";
+        std::cin >> op;
+        switch(op) {
+            case 1: {
+                std::cout << "请输入消息内容：";
+                std::string message;
+                std::cin >> message;
+                std::cout << sdk->SendMessage(session_id, message) << std::endl;
+                break;
+            }
+            case 2: {
+                std::cout << "请输入消息内容：";
+                std::string message;
+                std::cin >> message;
+                std::cout << sdk->SendMessageStream(session_id, message, [](const std::string &message, bool flag) {
+                    std::cout << message << std::flush;
+                }) << std::endl;
+                break;
+            }
+            case 3: {
+                std::cout << "deepseek-flash" << std::endl;
+                std::cout << "mimo-v2.5-pro" << std::endl;
+                std::cout << "kimi-k3" << std::endl;
+                std::cout << "qwen3:0.6b" << std::endl;
+                std::cout << "请输入模型名称：";
+                std::string model_name;
+                std::cin >> model_name;
+                sdk->UpdateSessionModel(session_id, model_name);
+                break;
+            }
+            case 0:
+                break;
+            default:
+                std::cout << "输入错误，请重新输入" << std::endl;
+                break;
+        }
+    } while(true);
+}
 
 int main(int argc, char **argv) {
     mylog::Logger::Init("testLLM", "stdout", spdlog::level::info);

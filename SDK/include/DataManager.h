@@ -48,5 +48,7 @@ namespace ai_chat_sdk {
         std::vector<Message> QueryMessage(std::string session_id);
         // 删除所有消息
         bool DeleteAllMessage(std::string session_id);
+        // 查询所有消息数量
+        int MessageCount(std::string session_id);
     };
 }

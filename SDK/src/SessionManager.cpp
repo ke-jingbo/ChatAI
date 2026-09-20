@@ -23,13 +23,13 @@ namespace ai_chat_sdk {
         return oss.str();
     }
     // 创建消息id
-    std::string SessionManager::CreateMessageId(size_t message_count) {
+    std::string SessionManager::CreateMessageId(std::string session_id) {
         // message_timestamp_count
         // message_1234567890_00000001
         time_t current_time = time(nullptr);
         std::ostringstream oss;
-        message_count++;
-        oss << "message_" << current_time << "_" << std::setw(8) << std::setfill('0') << message_count;
+        int count = _data_manager.MessageCount(session_id) + 1;
+        oss << "message_" << current_time << "_" << std::setw(8) << std::setfill('0') << count;
         return oss.str();
     }
 
@@ -99,6 +99,7 @@ namespace ai_chat_sdk {
         auto messages = _data_manager.QueryMessage(session_id);
         _mutex.lock();
         _sessions[session_id]->_messages = messages;
+        _mutex.unlock();
         return _sessions[session_id];
     }
 

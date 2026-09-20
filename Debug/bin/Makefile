@@ -153,6 +153,54 @@ TestLLM.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/TestLLM.cpp.s
 .PHONY : TestLLM.cpp.s
 
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.o
+
+# target to build an object file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.o
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.i: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.i
+
+# target to preprocess a source file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.i
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.s: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.s
+
+# target to generate assembly for a file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.cpp.s
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.o
+
+# target to build an object file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.o
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.i: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.i
+
+# target to preprocess a source file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.i
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.s: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.s
+
+# target to generate assembly for a file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.cpp.s
+
 home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp.o
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.o
 
@@ -273,6 +321,30 @@ home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.s
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp.s
 
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.o
+
+# target to build an object file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.o
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.o
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.i: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.i
+
+# target to preprocess a source file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.i
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.i
+
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.s: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.s
+
+# target to generate assembly for a file
+home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testLLM.dir/build.make CMakeFiles/testLLM.dir/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.s
+.PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp.s
+
 home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.o: home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.cpp.o
 .PHONY : home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.o
 
@@ -309,6 +381,12 @@ help:
 	@echo "... TestLLM.o"
 	@echo "... TestLLM.i"
 	@echo "... TestLLM.s"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.o"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.i"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/ChatSDK.s"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.o"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.i"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DataManager.s"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.s"
@@ -324,6 +402,9 @@ help:
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.s"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.o"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.i"
+	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.s"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.o"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.i"
 	@echo "... home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/util/mylog.s"

@@ -18,7 +18,9 @@ add_executable(testLLM TestLLM.cpp
 ../SDK/src/KimiProvider.cpp
 ../SDK/src/OllamaLLMProvider.cpp
 ../SDK/src/LLMManager.cpp
-../SDK/src/DataManager.cpp)
+../SDK/src/SessionManager.cpp
+../SDK/src/DataManager.cpp
+../SDK/src/ChatSDK.cpp)
 
 # 设置输出根目录
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
