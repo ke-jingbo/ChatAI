@@ -127,6 +127,10 @@ namespace ai_chat_sdk {
             return false;
         }
         rc = sqlite3_finalize(stmt);
+        if(rc != SQLITE_OK) {
+            ERR("UpdateSessionTime error: {}", sqlite3_errmsg(_db));
+            return false;
+        }
         return true;
     }
 
@@ -178,7 +182,7 @@ namespace ai_chat_sdk {
 
     std::vector<std::string> DataManager::QueryAllSessionId() {
         std::lock_guard<std::mutex> lock(_mutex);
-        const char *sql = R"(select session_id from sessions order by updata_time desc)";
+        const char *sql = R"(select session_id from sessions order by update_time desc)";
         sqlite3_stmt *stmt;
         int rc = sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr);
         if(rc != SQLITE_OK) {
@@ -249,11 +253,11 @@ namespace ai_chat_sdk {
             ERR("InsertMessage error: {}", sqlite3_errmsg(_db));
             return false;
         }
-        sqlite3_bind_text(stmt, 1, session_id.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 1, message._messageid.c_str(), -1, SQLITE_TRANSIENT);
         sqlite3_bind_text(stmt, 2, message._role.c_str(), -1, SQLITE_TRANSIENT);
         sqlite3_bind_text(stmt, 3, message._content.c_str(), -1, SQLITE_TRANSIENT);
         sqlite3_bind_int64(stmt, 4, static_cast<int64_t>(message._timestamp));
-        sqlite3_bind_text(stmt, 5, message._messageid.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 5, session_id.c_str(), -1, SQLITE_TRANSIENT);
         rc = sqlite3_step(stmt);
         if(rc != SQLITE_DONE) {
             ERR("InsertMessage error: {}", sqlite3_errmsg(_db));

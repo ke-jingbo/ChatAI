@@ -16,7 +16,7 @@ namespace ai_chat_sdk {
         std::atomic<int64_t> _session_counter = {0};                       // 会话计数器
         DataManager _data_manager;                                           // 数据库管理器
 
-    private:
+    public:
         // 创建会话id
         std::string CreateSessionId();
         // 创建消息id

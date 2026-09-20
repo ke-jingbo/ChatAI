@@ -6,9 +6,12 @@
 #include <map>
 #include <functional>
 #include <memory>
+#include <atomic>
+#include <iomanip>
 
 namespace ai_chat_sdk {
     struct Message;
+    class SessionManager;
     // 会话
     struct Session {
         std::string _session_id;        // 会话的id
@@ -25,12 +28,25 @@ namespace ai_chat_sdk {
         std::string _content;       // 消息的内容
         std::time_t _timestamp;     // 消息的时间戳
         std::string _messageid;     // 消息的id
+        static std::atomic<int64_t> _message_counter; // 消息计数器
 
-        Message(const std::string role = "", const std::string content = "")
+        static std::string CreateMessageId() {
+            // message_timestamp_count
+            // message_1234567890_00000001
+            time_t current_time = time(nullptr);
+            std::ostringstream oss;
+            int count = _message_counter.fetch_add(1);
+            oss << "message_" << current_time << "_" << std::setw(8) << std::setfill('0') << count;
+            return oss.str();
+        }
+
+        Message(const std::string role = "", const std::string content = "") 
             :_role(role)
             ,_content(content)
-            ,_timestamp(time(nullptr)) {}
+            ,_timestamp(time(nullptr)) 
+            ,_messageid(CreateMessageId()) {}
     };
+    inline std::atomic<int64_t> Message::_message_counter = {0};
 
     
     // 模型配置

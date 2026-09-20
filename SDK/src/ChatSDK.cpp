@@ -128,8 +128,12 @@ namespace ai_chat_sdk {
         _session_manager.DeleteSession(session_id);
     }
     // 更新会话模型
-    void ChatSDK::UpdateSessionModel(const std::string session_id, const std::string model_name) {
-        _session_manager.UpdateSession(session_id, model_name);
+    bool ChatSDK::UpdateSessionModel(const std::string session_id, const std::string model_name) {
+        if(_llm_manager.IsModelAvailable(model_name) == false) {
+            ERR("ChatSDK::UpdateSessionModel() model is not available: {}", model_name);
+            return false;
+        }
+        return _session_manager.UpdateSession(session_id, model_name);
     }
     // 获取所有会话列表
     std::vector<std::string> ChatSDK::GetSessions() {
@@ -138,6 +142,10 @@ namespace ai_chat_sdk {
     // 获取指定会话
     std::shared_ptr<Session> ChatSDK::GetSession(const std::string session_id) {
         return _session_manager.GetSession(session_id);
+    }
+    // 清空所有会话
+    void ChatSDK::ClearAllSessions() {
+        _session_manager.ClearAllSessions();
     }
 
     // 发送消息
@@ -178,9 +186,9 @@ namespace ai_chat_sdk {
         messages.push_back(req_message);
         // 初始化请求参数
         Params request_params;
-        request_params["temperature"] = model._config._temperature;
-        request_params["max_tokens"] = model._config._max_tokens;
-        request_params["think"] = model._config._think;
+        request_params["temperature"] = std::to_string(model._config._temperature);
+        request_params["max_tokens"] = std::to_string(model._config._max_tokens);
+        request_params["think"] = model._config._think ? "true" : "false";
         request_params["reasoning_effort"] = model._config._reasoning_effort;
         // 发送消息流式
         std::string res = _llm_manager.SendMessageStream(model, messages, request_params, callback);

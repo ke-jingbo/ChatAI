@@ -141,11 +141,14 @@ namespace ai_chat_sdk {
             _mutex.unlock();
             return false;
         }
-        // 添加消息
+        // 内存中添加消息
         (_sessions[session_id])->_messages.push_back(message);
-        // 更新时间戳
-        (_sessions[session_id])->_update_time = time(nullptr);
         _mutex.unlock();
+        // 更新时间戳
+        if(!UpdateSessionTimestamp(session_id)) {
+            ERR("SessionManager::UpdateSessionMessages() update session timestamp in database failed");
+            return false;
+        }
         // 数据库中更新
         if(!_data_manager.InsertMessage(session_id, message)) {
             ERR("SessionManager::UpdateSessionMessages() update session messages in database failed");
@@ -156,6 +159,7 @@ namespace ai_chat_sdk {
 
     // 更新时间戳
     bool SessionManager::UpdateSessionTimestamp(const std::string &session_id) {
+        // 内存中更新
         _mutex.lock();
         if(_sessions.find(session_id) == _sessions.end()) {
             ERR("SessionManager::UpdateSessionTimestamp() session not found: {}", session_id);

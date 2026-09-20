@@ -30,11 +30,13 @@ namespace ai_chat_sdk {
         // 删除会话
         void DeleteSession(const std::string session_id);
         // 更新会话模型
-        void UpdateSessionModel(const std::string session_id, const std::string model_name);
+        bool UpdateSessionModel(const std::string session_id, const std::string model_name);
         // 获取所有会话列表
         std::vector<std::string> GetSessions();
         // 获取指定会话
         std::shared_ptr<Session> GetSession(const std::string session_id);
+        // 清空所有会话
+        void ClearAllSessions();
 
         // 发送消息
         std::string SendMessage(const std::string session_id, const std::string message);

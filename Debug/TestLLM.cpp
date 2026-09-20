@@ -149,6 +149,7 @@
 
 TEST(ChatSDK, TestSendMssage) {
     std::unique_ptr<ai_chat_sdk::ChatSDK> sdk(new ai_chat_sdk::ChatSDK());
+    // sdk->ClearAllSessions();
     ai_chat_sdk::ProviderConfigs provider_configs;
     std::shared_ptr<ai_chat_sdk::ProviderConfig> deepseek_provider_config(
         new ai_chat_sdk::APIConfig("DeepseekProvider", std::getenv("deepseek_apikey")));
@@ -172,9 +173,18 @@ TEST(ChatSDK, TestSendMssage) {
     models.push_back(kimi_model);
     models.push_back(qwen3_model);
     ASSERT_TRUE(sdk->InitLLMManager(provider_configs, models));
-    std::string session_id = sdk->CreateSession("deepseek-flash");
+    std::vector<std::string> session_ids = sdk->GetSessions();
+    std::string session_id;
+    if(session_ids.empty()) {
+        std::cout << "没有会话，请先创建会话" << std::endl;
+        session_id = sdk->CreateSession("deepseek-flash");
+    }
+    else {
+        std::cout << "当前会话：" << session_ids[0] << std::endl;
+        session_id = session_ids[0];
+    }
+    int op = 0;
     do {
-        int op = 0;
         std::cout << "-----------------------请输入操作：----------------------" << std::endl;
         std::cout << "1. 发送消息" << std::endl;
         std::cout << "2. 发送消息流式" << std::endl;
@@ -195,9 +205,10 @@ TEST(ChatSDK, TestSendMssage) {
                 std::cout << "请输入消息内容：";
                 std::string message;
                 std::cin >> message;
-                std::cout << sdk->SendMessageStream(session_id, message, [](const std::string &message, bool flag) {
+                sdk->SendMessageStream(session_id, message, [](const std::string &message, bool flag) {
                     std::cout << message << std::flush;
-                }) << std::endl;
+                });
+                std::cout << std::endl;
                 break;
             }
             case 3: {
@@ -208,16 +219,20 @@ TEST(ChatSDK, TestSendMssage) {
                 std::cout << "请输入模型名称：";
                 std::string model_name;
                 std::cin >> model_name;
-                sdk->UpdateSessionModel(session_id, model_name);
+                if(sdk->UpdateSessionModel(session_id, model_name)) 
+                    std::cout << "更新成功：" << model_name << std::endl;
+                else std::cout << "更新失败：" << model_name << std::endl;
                 break;
             }
-            case 0:
+            case 0: {
+                op = 0;
                 break;
+            }
             default:
                 std::cout << "输入错误，请重新输入" << std::endl;
                 break;
         }
-    } while(true);
+    } while(op != 0);
 }
 
 int main(int argc, char **argv) {

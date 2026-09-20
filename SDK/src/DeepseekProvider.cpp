@@ -206,6 +206,7 @@ namespace ai_chat_sdk {
                     if(root.isMember("choices") && root["choices"].isArray() && !root["choices"].empty()
                         && root["choices"][0].isMember("delta") && root["choices"][0]["delta"].isMember("content")) {
                         std::string content = root["choices"][0]["delta"]["content"].asString();
+                        full_response += content;
                         callback(content, false);
                     }
                     else {
