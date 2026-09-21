@@ -43,11 +43,15 @@ namespace ai_chat_sdk {
         // 如果有温度和最大token数，则使用指定的参数 否则使用默认值
         double temperature = 0.8;
         int max_tokens = 2048;
+        std::string think = "enabled";
         if(request_params.find("temperature") != request_params.end()) {
             temperature = std::stod(request_params["temperature"]);
         }
         if(request_params.find("max_tokens") != request_params.end()) {
             max_tokens = std::stoi(request_params["max_tokens"]);
+        }
+        if(request_params.find("think") != request_params.end()) {
+            think = (request_params["think"] == "true") ? "enabled" : "disabled";
         }
         // 2. 构建Json历史消息
         Json::Value message_array(Json::arrayValue);
@@ -64,6 +68,9 @@ namespace ai_chat_sdk {
         request_obj["temperature"] = temperature;
         request_obj["max_completion_tokens"] = max_tokens;
         request_obj["stream"] = isstream;
+        Json::Value think_obj;
+        think_obj["think"] = think;
+        request_obj["think"] = think_obj;
         // 4. 序列化请求参数
         Json::StreamWriterBuilder builder;
         builder["indentation"] = "";

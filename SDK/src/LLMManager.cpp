@@ -81,6 +81,27 @@ namespace ai_chat_sdk {
         }
         return _models[model_name];
     }
+    // 更改模型参数
+    bool LLMManager::UpdateModelConfig(const std::string &model_name, Params &params) {
+        if(_models.find(model_name) == _models.end()) {
+            ERR("LLMManager::UpdateModelConfig() model not found: {}", model_name);
+            return false;
+        }
+        auto &model = _models[model_name];
+        if(params.find("temperature") != params.end()) {
+            model._config._temperature = std::stof(params["temperature"]);
+        }
+        if(params.find("max_tokens") != params.end()) {
+            model._config._max_tokens = std::stoi(params["max_tokens"]);
+        }
+        if(params.find("think") != params.end()) {
+            model._config._think = (params["think"] == "true");
+        }
+        if(params.find("reasoning_effort") != params.end()) {
+            model._config._reasoning_effort = params["reasoning_effort"];
+        }
+        return true;
+    }
 
     // 发送消息
     std::string LLMManager::SendMessage(Model model, Messages messages, Params request_params) {

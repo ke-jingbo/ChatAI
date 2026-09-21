@@ -4,6 +4,7 @@
 #include "LLMManager.h"
 #include "SessionManager.h"
 
+
 namespace ai_chat_sdk {
     using ProviderConfigs = std::vector<std::shared_ptr<ProviderConfig>>;
     using Models = std::vector<Model>;
@@ -24,6 +25,8 @@ namespace ai_chat_sdk {
         bool InitLLMManager(std::vector<std::shared_ptr<ProviderConfig>> provider_configs, std::vector<Model> models);
         // 获取可用模型信息
         std::vector<Model> GetAvailableModels();
+        // 获取指定模型信息
+        Model GetModel(const std::string &model_name);
 
         // 创建会话
         std::string CreateSession(const std::string model_name);
@@ -31,6 +34,8 @@ namespace ai_chat_sdk {
         void DeleteSession(const std::string session_id);
         // 更新会话模型
         bool UpdateSessionModel(const std::string session_id, const std::string model_name);
+        // 更新会话模型的参数
+        bool UpdateSessionModelConfig(const std::string session_id, Params &params);
         // 获取所有会话列表
         std::vector<std::string> GetSessions();
         // 获取指定会话

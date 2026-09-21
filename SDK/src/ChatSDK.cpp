@@ -1,9 +1,9 @@
 #include "../include/ChatSDK.h"
-#include "../include/util/mylog.h"
 #include "../include/DeepseekProvider.h"
 #include "../include/MimoProvider.h"
 #include "../include/OllamaLLMProvider.h"
 #include "../include/KimiProvider.h"
+#include "../include/util/mylog.h"
 
 
 namespace ai_chat_sdk {
@@ -107,6 +107,11 @@ namespace ai_chat_sdk {
         return true;
     }
 
+    // 获取指定模型信息
+    Model ChatSDK::GetModel(const std::string &model_name) {
+        return _llm_manager.GetModel(model_name);
+    }
+
     // 初始化LLMManager
     bool ChatSDK::InitLLMManager(ProviderConfigs provider_configs, Models models) {
         // 注册并初始化提供者/模型
@@ -134,6 +139,11 @@ namespace ai_chat_sdk {
             return false;
         }
         return _session_manager.UpdateSession(session_id, model_name);
+    }
+    // 更新会话模型的参数
+    bool ChatSDK::UpdateSessionModelConfig(const std::string session_id, Params &params) {
+        std::string model_name = (_session_manager.GetSession(session_id))->_model_name;
+        return _llm_manager.UpdateModelConfig(model_name, params);
     }
     // 获取所有会话列表
     std::vector<std::string> ChatSDK::GetSessions() {

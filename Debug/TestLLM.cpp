@@ -167,10 +167,12 @@ TEST(ChatSDK, TestSendMssage) {
     ai_chat_sdk::Model deepseek_model("deepseek-flash", "DeepseekProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
     ai_chat_sdk::Model mimo_model("mimo-v2.5-pro", "MimoProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
     ai_chat_sdk::Model kimi_model("kimi-k3", "KimiProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
+    ai_chat_sdk::Model kimi_model2("kimi-k2.6", "KimiProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
     ai_chat_sdk::Model qwen3_model("qwen3:0.6b", "OllamaLLMProvider", "这是一个测试模型", ai_chat_sdk::ModelConfig());
     models.push_back(deepseek_model);
     models.push_back(mimo_model);
     models.push_back(kimi_model);
+    models.push_back(kimi_model2);
     models.push_back(qwen3_model);
     ASSERT_TRUE(sdk->InitLLMManager(provider_configs, models));
     std::vector<std::string> session_ids = sdk->GetSessions();
@@ -215,6 +217,7 @@ TEST(ChatSDK, TestSendMssage) {
                 std::cout << "deepseek-flash" << std::endl;
                 std::cout << "mimo-v2.5-pro" << std::endl;
                 std::cout << "kimi-k3" << std::endl;
+                std::cout << "kimi-k2.6" << std::endl;
                 std::cout << "qwen3:0.6b" << std::endl;
                 std::cout << "请输入模型名称：";
                 std::string model_name;

@@ -42,11 +42,15 @@ namespace ai_chat_sdk {
         // 如果有最大token数，则使用指定的参数 否则使用默认值
         int max_tokens = 2048;
         std::string reasoning_effort = "high";  // low high max
+        std::string think = "enabled";
         if(request_params.find("max_tokens") != request_params.end()) {
             max_tokens = std::stoi(request_params["max_tokens"]);
         }
         if(request_params.find("reasoning_effort") != request_params.end()) {
             reasoning_effort = request_params["reasoning_effort"];
+        }
+        if(request_params.find("think") != request_params.end()) {
+            think = (request_params["think"] == "true") ? "enabled" : "disabled";
         }
         // 2. 构建Json历史消息
         Json::Value message_array(Json::arrayValue);
@@ -57,13 +61,17 @@ namespace ai_chat_sdk {
             message_array.append(message_obj);
         }
         // 3. 构建Json请求参数
-        // reasoning_effort TODO
         Json::Value request_obj;
         request_obj["model"] = model._name;
         request_obj["messages"] = message_array;
         request_obj["max_completion_tokens"] = max_tokens;
         request_obj["stream"] = isstream;
         request_obj["reasoning_effort"] = reasoning_effort;
+        if(model._name == "kimi-k2.6") {
+            Json::Value think_obj;
+            think_obj["think"] = think;
+            request_obj["think"] = think_obj;
+        }
         // 4. 序列化请求参数
         Json::StreamWriterBuilder builder;
         builder["indentation"] = "";

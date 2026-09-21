@@ -211,6 +211,10 @@ CMakeFiles/ai_chat_sdk.dir/src/ChatSDK.cpp.o: \
  /usr/include/c++/11/bits/unique_lock.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/DataManager.h \
  /usr/include/sqlite3.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/DeepseekProvider.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/MimoProvider.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/OllamaLLMProvider.h \
+ /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/KimiProvider.h \
  /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/util/mylog.h \
  /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
  /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \
@@ -313,8 +317,4 @@ CMakeFiles/ai_chat_sdk.dir/src/ChatSDK.cpp.o: \
  /usr/include/spdlog/async_logger-inl.h \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
- /usr/include/spdlog/details/thread_pool-inl.h \
- /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/DeepseekProvider.h \
- /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/MimoProvider.h \
- /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/OllamaLLMProvider.h \
- /home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/../include/KimiProvider.h
+ /usr/include/spdlog/details/thread_pool-inl.h

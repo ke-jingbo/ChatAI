@@ -24,6 +24,8 @@ namespace ai_chat_sdk {
         std::vector<Model> GetInitModels();
         // 获取指定可用模型
         Model GetModel(const std::string &model_name);
+        // 更改模型参数
+        bool UpdateModelConfig(const std::string &model_name, Params &params);
         // 发送消息
         std::string SendMessage(Model model, Messages messages, Params request_params);
         // 流式发送消息

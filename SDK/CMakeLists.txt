@@ -34,11 +34,11 @@ target_include_directories(${SDK_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/includ
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
-# # 安装规则 拷贝静态库到系统目录下  /usr/local/lib
-# install(TARGETS ${SDK_NAME} ARCHIVE DESTINATION lib)
+# 安装规则 拷贝静态库到系统目录下  /usr/local/lib
+install(TARGETS ${SDK_NAME} ARCHIVE DESTINATION lib)
 
-# # 安装规则 拷贝头文件到系统目录下  /usr/local/include
-# install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-#         DESTINATION include/ai_chat_sdk
-#         FILES_MATCHING PATTERN "*.h"
-# )
+# 安装规则 拷贝头文件到系统目录下  /usr/local/include
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        DESTINATION include/ai_chat_sdk
+        FILES_MATCHING PATTERN "*.h"
+)
