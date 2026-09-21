@@ -31,7 +31,7 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 # 添加CPPHTTPLIB_OPENSSL_SUPPORT定义
-target_compile_definitions(testLLM PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
+target_compile_definitions(testLLM PUBLIC CPPHTTPLIB_OPENSSL_SUPPORT)
 
 # 链接库
 target_link_libraries(testLLM jsoncpp fmt spdlog gtest sqlite3 OpenSSL::SSL OpenSSL::Crypto)
