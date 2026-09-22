@@ -34,7 +34,7 @@ namespace ai_chat_sdk {
     }
 
     // 创建会话
-    std::string SessionManager::CreateSession(const std::string &model_name) {
+    std::string SessionManager::CreateSession(const std::string &model_name, const std::string &session_name) {
         // 内存中创建
         _mutex.lock();
         if(model_name.empty()) {
@@ -43,8 +43,9 @@ namespace ai_chat_sdk {
             return "";
         }
         std::string session_id = CreateSessionId();
-        std::shared_ptr<Session> session(new Session(model_name));
+        std::shared_ptr<Session> session(new Session(model_name, session_name));
         session->_session_id = session_id;
+        session->_session_name = session_name;
         session->_model_name = model_name;
         session->_start_time = time(nullptr);
         session->_update_time = time(nullptr);
@@ -143,6 +144,18 @@ namespace ai_chat_sdk {
         }
         // 内存中添加消息
         (_sessions[session_id])->_messages.push_back(message);
+        // 如果是第一条消息并且会话名称为new session，则更新会话名称
+        if(_sessions[session_id]->_messages.size() == 1 && _sessions[session_id]->_session_name == "new session") {
+            // 先在内存中修改
+            _sessions[session_id]->_session_name = message._content;
+            _mutex.unlock();
+            // 数据库中修改
+            if(!_data_manager.UpdateSessionName(session_id, message._content)) {
+                ERR("SessionManager::UpdateSessionMessages() update session name in database failed");
+                return false;
+            }
+            _mutex.lock();
+        }
         _mutex.unlock();
         // 更新时间戳
         if(!UpdateSessionTimestamp(session_id)) {
@@ -152,6 +165,24 @@ namespace ai_chat_sdk {
         // 数据库中更新
         if(!_data_manager.InsertMessage(session_id, message)) {
             ERR("SessionManager::UpdateSessionMessages() update session messages in database failed");
+            return false;
+        }
+        return true;
+    }
+
+    // 更新会话名称
+    bool SessionManager::UpdateSessionName(const std::string &session_id, const std::string &session_name) {
+        _mutex.lock();
+        if(_sessions.find(session_id) == _sessions.end()) {
+            ERR("SessionManager::UpdateSessionName() session not found: {}", session_id);
+            _mutex.unlock();
+            return false;
+        }
+        (_sessions[session_id])->_session_name = session_name;
+        _mutex.unlock();
+        // 数据库中更新
+        if(!_data_manager.UpdateSessionName(session_id, session_name)) {
+            ERR("SessionManager::UpdateSessionName() update session name in database failed");
             return false;
         }
         return true;

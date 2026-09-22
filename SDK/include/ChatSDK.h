@@ -29,9 +29,11 @@ namespace ai_chat_sdk {
         Model GetModel(const std::string &model_name);
 
         // 创建会话
-        std::string CreateSession(const std::string model_name);
+        std::string CreateSession(const std::string model_name, const std::string session_name = "new session");
         // 删除会话
         void DeleteSession(const std::string session_id);
+        // 更新会话名称
+        bool UpdateSessionName(const std::string session_id, const std::string session_name);
         // 更新会话模型
         bool UpdateSessionModel(const std::string session_id, const std::string model_name);
         // 更新会话模型的参数

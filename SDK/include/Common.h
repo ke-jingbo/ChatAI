@@ -15,12 +15,14 @@ namespace ai_chat_sdk {
     // 会话
     struct Session {
         std::string _session_id;        // 会话的id
+        std::string _session_name = "new session";      // 会话的名称
         std::string _model_name;        // 会话的模型名称
         std::time_t _start_time;        // 会话的开始时间
         std::time_t _update_time;       // 会话的更新时间
         std::vector<Message> _messages; // 会话的消息列表
 
-        Session(const std::string modle_name = "") :_model_name(modle_name) {}
+        Session(const std::string modle_name = "", const std::string session_name = "new session") 
+            :_model_name(modle_name), _session_name(session_name) {}
     };
     // 消息
     struct Message {

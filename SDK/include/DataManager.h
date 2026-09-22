@@ -28,6 +28,8 @@ namespace ai_chat_sdk {
         std::shared_ptr<Session> QuerySession(std::string session_id);
         // 更新会话时间戳
         bool UpdateSessionTime(std::string session_id);
+        // 更新会话名称
+        bool UpdateSessionName(std::string session_id, std::string session_name);
         // 更新会话模型
         bool UpdateSessionModel(std::string session_id, std::string model_name);
         // 删除会话

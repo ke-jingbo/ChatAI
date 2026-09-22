@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AIChatServer API 测试前端">
+  <title>AIChatServer Console</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">AI</div>
+        <div>
+          <h1>ChatServer</h1>
+          <p>API Test Console</p>
+        </div>
+      </div>
+
+      <button id="new-session-button" class="button button-primary button-wide" type="button">
+        <span>＋</span> 新建会话
+      </button>
+
+      <div class="section-heading">
+        <span>会话记录</span>
+        <div class="section-heading-actions">
+          <button id="clear-sessions-button" class="icon-button clear-sessions-button" type="button" title="清空全部会话" aria-label="清空全部会话" disabled>⌫</button>
+          <button id="refresh-sessions-button" class="icon-button" type="button" title="刷新会话" aria-label="刷新会话">↻</button>
+        </div>
+      </div>
+      <div id="session-list" class="session-list" aria-live="polite"></div>
+
+      <div class="connection-panel">
+        <div class="connection-state">
+          <span id="connection-dot" class="status-dot"></span>
+          <span id="connection-label">等待连接</span>
+        </div>
+        <label for="api-base-input">API 地址</label>
+        <div class="input-action">
+          <input id="api-base-input" type="url" placeholder="同源请求">
+          <button id="apply-api-button" type="button">应用</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <div class="session-title">
+          <span class="eyebrow">CURRENT SESSION</span>
+          <div class="title-row">
+            <h2 id="current-session-title">尚未选择会话</h2>
+            <button id="rename-session-button" class="rename-button" type="button" title="修改会话名称" disabled>✎</button>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <label class="select-control">
+            <span>模型</span>
+            <select id="model-select" disabled>
+              <option value="">加载中…</option>
+            </select>
+          </label>
+          <button id="settings-button" class="button button-secondary" type="button" disabled>模型参数</button>
+          <button id="delete-session-button" class="button button-danger" type="button" disabled>删除会话</button>
+        </div>
+      </header>
+
+      <section id="empty-state" class="empty-state">
+        <div class="empty-icon">✦</div>
+        <h2>开始一次 API 测试</h2>
+        <p>选择一个模型并创建会话，然后测试普通或流式消息接口。</p>
+        <button id="empty-new-session-button" class="button button-primary" type="button">创建第一个会话</button>
+      </section>
+
+      <section id="chat-view" class="chat-view hidden">
+        <div id="message-list" class="message-list" aria-live="polite"></div>
+
+        <div class="composer-wrap">
+          <form id="message-form" class="composer">
+            <textarea id="message-input" rows="1" maxlength="12000" placeholder="输入消息，Enter 发送，Shift + Enter 换行"></textarea>
+            <div class="composer-footer">
+              <label class="switch-label">
+                <input id="stream-toggle" type="checkbox" checked>
+                <span class="switch"></span>
+                流式响应
+              </label>
+              <div class="composer-meta">
+                <span id="character-count">0 / 12000</span>
+                <button id="send-button" class="send-button" type="submit" title="发送消息">发送 ↑</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="new-session-dialog" class="modal">
+    <form id="new-session-form" method="dialog">
+      <div class="modal-header">
+        <div>
+          <span class="eyebrow">NEW SESSION</span>
+          <h2>创建测试会话</h2>
+        </div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-dialog>×</button>
+      </div>
+      <label class="field">
+        <span>会话名称</span>
+        <input id="new-session-name" type="text" maxlength="20" value="new session" autocomplete="off" required>
+      </label>
+      <label class="field">
+        <span>选择模型</span>
+        <select id="new-session-model" required></select>
+      </label>
+      <div id="new-model-description" class="model-description"></div>
+      <div class="modal-actions">
+        <button class="button button-secondary" value="cancel" type="button" data-close-dialog>取消</button>
+        <button class="button button-primary" type="submit">创建会话</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog" class="modal">
+    <form id="settings-form" method="dialog">
+      <div class="modal-header">
+        <div>
+          <span class="eyebrow">MODEL CONFIG</span>
+          <h2>模型参数</h2>
+        </div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-dialog>×</button>
+      </div>
+      <div class="settings-grid">
+        <label class="field">
+          <span>Temperature</span>
+          <input id="temperature-input" type="number" min="0" max="2" step="0.1" value="0.8" required>
+        </label>
+        <label class="field">
+          <span>Max tokens</span>
+          <input id="max-tokens-input" type="number" min="1" step="1" value="2048" required>
+        </label>
+        <label class="field">
+          <span>Reasoning effort</span>
+          <select id="reasoning-effort-select">
+            <option value="low">low</option>
+            <option value="high" selected>high</option>
+            <option value="max">max</option>
+          </select>
+        </label>
+        <label class="field checkbox-field">
+          <input id="think-input" type="checkbox" checked>
+          <span>启用思考模式</span>
+        </label>
+      </div>
+      <p class="modal-note">注意：当前 SDK 的模型参数作用于同名模型，而不是单一会话。</p>
+      <div class="modal-actions">
+        <button class="button button-secondary" value="cancel" type="button" data-close-dialog>取消</button>
+        <button class="button button-primary" type="submit">保存参数</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="rename-session-dialog" class="modal modal-small">
+    <form id="rename-session-form" method="dialog">
+      <div class="modal-header">
+        <div>
+          <span class="eyebrow">SESSION NAME</span>
+          <h2>修改会话名称</h2>
+        </div>
+        <button class="modal-close" type="button" aria-label="关闭" data-close-dialog>×</button>
+      </div>
+      <label class="field">
+        <span>会话名称</span>
+        <input id="session-name-input" type="text" maxlength="20" autocomplete="off" required>
+      </label>
+      <p class="modal-note">名称最多 20 个字符。</p>
+      <div class="modal-actions">
+        <button class="button button-secondary" value="cancel" type="button" data-close-dialog>取消</button>
+        <button class="button button-primary" type="submit">保存名称</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>

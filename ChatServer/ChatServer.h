@@ -38,12 +38,16 @@ namespace ai_chat_server {
         void CreateNewSession(const httplib::Request& req, httplib::Response& res);
         // 删除会话
         void DeleteSession(const httplib::Request& req, httplib::Response& res);
+        // 删除所有会话
+        void DeleteAllSession(const httplib::Request& req, httplib::Response& res);
         // 获取会话列表
         void GetSessionList(const httplib::Request& req, httplib::Response& res);
         // 获取指定会话历史消息
         void GetSessionHistory(const httplib::Request& req, httplib::Response& res);
         // 获取可用模型
         void GetModels(const httplib::Request& req, httplib::Response& res);
+        // 更改当前会话的名称
+        void ChangeSessionName(const httplib::Request& req, httplib::Response& res);
         // 更改当前会话的模型参数
         void ChangeModelConfig(const httplib::Request& req, httplib::Response& res);
         // 更改当前会话的模型

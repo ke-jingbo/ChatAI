@@ -125,12 +125,16 @@ namespace ai_chat_sdk {
     }
 
     // 创建会话
-    std::string ChatSDK::CreateSession(const std::string model_name) {
-        return _session_manager.CreateSession(model_name);
+    std::string ChatSDK::CreateSession(const std::string model_name, const std::string session_name) {
+        return _session_manager.CreateSession(model_name, session_name);
     }
     // 删除会话
     void ChatSDK::DeleteSession(const std::string session_id) {
         _session_manager.DeleteSession(session_id);
+    }
+    // 更新会话名称
+    bool ChatSDK::UpdateSessionName(const std::string session_id, const std::string session_name) {
+        return _session_manager.UpdateSessionName(session_id, session_name);
     }
     // 更新会话模型
     bool ChatSDK::UpdateSessionModel(const std::string session_id, const std::string model_name) {

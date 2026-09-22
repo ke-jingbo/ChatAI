@@ -25,13 +25,15 @@ namespace ai_chat_sdk {
     public:
         SessionManager(std::string dbName);
         // 创建会话
-        std::string CreateSession(const std::string &model_name);
+        std::string CreateSession(const std::string &model_name, const std::string &session_name);
         // 删除会话
         bool DeleteSession(const std::string &session_id);
         // 获取会话
         std::shared_ptr<Session> GetSession(const std::string &session_id);
         // 获取会话所有历史信息
         std::vector<Message> GetSessionMessages(const std::string &session_id);
+        // 更新会话名称
+        bool UpdateSessionName(const std::string &session_id, const std::string &session_name);
         // 更新会话模型
         bool UpdateSession(const std::string &session_id, const std::string &model_name);
         // 更新会话消息

@@ -33,10 +33,15 @@ namespace ai_chat_sdk {
     }
 
     bool DataManager::InitTable() {
+        if (!SqlExec("PRAGMA foreign_keys = ON;")) {
+            ERR("Enable foreign keys failed");
+            return false;
+        }
         // 创建会话表
         std::string sql = R"(
             create table if not exists sessions (
             session_id text primary key,
+            session_name text not null,
             model_name text not null,
             start_time integer not null,
             update_time integer not null
@@ -62,7 +67,7 @@ namespace ai_chat_sdk {
     // 会话相关操作
     bool DataManager::InsertSession(Session &session) {
         std::lock_guard<std::mutex> lock(_mutex);
-        const char *sql = R"(insert into sessions values (?, ?, ?, ?))";
+        const char *sql = R"(insert into sessions values (?, ?, ?, ?, ?))";
         sqlite3_stmt *stmt;
         int rc = sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr);
         if(rc != SQLITE_OK) {
@@ -70,9 +75,10 @@ namespace ai_chat_sdk {
             return false;
         }
         sqlite3_bind_text(stmt, 1, session._session_id.c_str(), -1, SQLITE_TRANSIENT);
-        sqlite3_bind_text(stmt, 2, session._model_name.c_str(), -1, SQLITE_TRANSIENT);
-        sqlite3_bind_int64(stmt, 3, static_cast<int64_t>(session._start_time));
-        sqlite3_bind_int64(stmt, 4, static_cast<int64_t>(session._update_time));
+        sqlite3_bind_text(stmt, 2, session._session_name.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, session._model_name.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int64(stmt, 4, static_cast<int64_t>(session._start_time));
+        sqlite3_bind_int64(stmt, 5, static_cast<int64_t>(session._update_time));
         rc = sqlite3_step(stmt);
         if(rc != SQLITE_DONE) {
             ERR("InsertSession error: {}", sqlite3_errmsg(_db));
@@ -84,7 +90,7 @@ namespace ai_chat_sdk {
 
     std::shared_ptr<Session> DataManager::QuerySession(std::string session_id) {
         std::lock_guard<std::mutex> lock(_mutex);
-        const char *sql = R"(select model_name, start_time, update_time from sessions where session_id = ?)";
+        const char *sql = R"(select session_name, model_name, start_time, update_time from sessions where session_id = ?)";
         sqlite3_stmt *stmt;
         int rc = sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr);
         if(rc != SQLITE_OK) {
@@ -99,15 +105,36 @@ namespace ai_chat_sdk {
             sqlite3_finalize(stmt);
             return nullptr;
         }
-        std::string model_name = std::string((const char *)sqlite3_column_text(stmt, 0));
-        int64_t start_time = sqlite3_column_int64(stmt, 1);
-        int64_t update_time = sqlite3_column_int64(stmt, 2);
+        std::string session_name = std::string((const char *)sqlite3_column_text(stmt, 0));
+        std::string model_name = std::string((const char *)sqlite3_column_text(stmt, 1));
+        int64_t start_time = sqlite3_column_int64(stmt, 2);
+        int64_t update_time = sqlite3_column_int64(stmt, 3);
         std::shared_ptr<Session> session = std::make_shared<Session>(model_name);
         session->_session_id = session_id;
         session->_start_time = static_cast<std::time_t>(start_time);
         session->_update_time = static_cast<std::time_t>(update_time);
         sqlite3_finalize(stmt);
         return session;
+    }
+
+    bool DataManager::UpdateSessionName(std::string session_id, std::string session_name) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        const char *sql = R"(update sessions set session_name = ? where session_id = ?)";
+        sqlite3_stmt *stmt;
+        int rc = sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr);
+        if(rc != SQLITE_OK) {
+            ERR("UpdateSessionName error: {}", sqlite3_errmsg(_db));
+            return false;
+        }
+        sqlite3_bind_text(stmt, 1, session_name.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, session_id.c_str(), -1, SQLITE_TRANSIENT);
+        rc = sqlite3_step(stmt);
+        if(rc != SQLITE_DONE) {
+            ERR("UpdateSessionName error: {}", sqlite3_errmsg(_db));
+            return false;
+        }
+        rc = sqlite3_finalize(stmt);
+        return true;
     }
 
     bool DataManager::UpdateSessionTime(std::string session_id) {
@@ -211,9 +238,10 @@ namespace ai_chat_sdk {
         while(sqlite3_step(stmt) == SQLITE_ROW) {
             std::shared_ptr<Session> session = std::make_shared<Session>();
             session->_session_id = std::string((const char *)sqlite3_column_text(stmt, 0));
-            session->_model_name = std::string((const char *)sqlite3_column_text(stmt, 1));
-            session->_start_time = sqlite3_column_int64(stmt, 2);
-            session->_update_time = sqlite3_column_int64(stmt, 3);
+            session->_session_name = std::string((const char *)sqlite3_column_text(stmt, 1));
+            session->_model_name = std::string((const char *)sqlite3_column_text(stmt, 2));
+            session->_start_time = sqlite3_column_int64(stmt, 3);
+            session->_update_time = sqlite3_column_int64(stmt, 4);
             sessions.emplace_back(session);
         }
         rc = sqlite3_finalize(stmt);

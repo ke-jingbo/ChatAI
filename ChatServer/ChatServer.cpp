@@ -64,14 +64,27 @@ namespace ai_chat_server {
             BuildERRResponse(res, 400, "parse request body failed");
             return;
         }
-        std::string model_name = request_obj["model_name"].asString();
+        std::string model_name;
+        std::string session_name = "new session";
+        if(!request_obj.isMember("model") || !request_obj["model"].isString()) {
+            ERR("ChatServer::CreateNewSession() parse request body failed");
+            BuildERRResponse(res, 400, "parse request body failed");
+            return;
+        }
+        if(!request_obj.isMember("session_name") || !request_obj["session_name"].isString()) {
+            ERR("ChatServer::CreateNewSession() parse request body failed");
+            BuildERRResponse(res, 400, "parse request body failed");
+            return;
+        }
+        session_name = request_obj["session_name"].asString();
+        model_name = request_obj["model"].asString();
         if(model_name.empty()) {
             ERR("ChatServer::CreateNewSession() model_name is empty");
             BuildERRResponse(res, 400, "model_name is empty");
             return;
         }
         // 创建会话
-        std::string session_id = _chat_sdk.CreateSession(model_name);
+        std::string session_id = _chat_sdk.CreateSession(model_name, session_name);
         if(session_id.empty()) {
             ERR("ChatServer::CreateNewSession() create session failed");
             BuildERRResponse(res, 500, "create session failed");
@@ -83,8 +96,9 @@ namespace ai_chat_server {
         response_obj["message"] = "create session success";
         Json::Value data_obj;
         data_obj["session_id"] = session_id;
+        data_obj["session_name"] = session_name;
         Json::Value model_obj;
-        model_obj["name"] = model_name;
+        model_obj["model"] = model_name;
         model_obj["temperature"] = _chat_sdk.GetModel(model_name)._config._temperature;
         model_obj["max_tokens"] = _chat_sdk.GetModel(model_name)._config._max_tokens;
         model_obj["think"] = _chat_sdk.GetModel(model_name)._config._think;
@@ -108,6 +122,16 @@ namespace ai_chat_server {
         res.set_content(response_obj.toStyledString(), "application/json");
         res.status = 200;
     }
+    // 删除所有会话
+    // DELETE /api/sessions
+    void ChatServer::DeleteAllSession(const httplib::Request& req, httplib::Response& res) {
+        _chat_sdk.ClearAllSessions();
+        Json::Value response_obj;
+        response_obj["success"] = true;
+        response_obj["message"] = "delete all session success";
+        res.set_content(response_obj.toStyledString(), "application/json");
+        res.status = 200;
+    }
     // 获取会话列表
     // GET /api/sessions
     void ChatServer::GetSessionList(const httplib::Request& req, httplib::Response& res) {
@@ -116,13 +140,29 @@ namespace ai_chat_server {
         response_obj["message"] = "get session list success";
         Json::Value data_obj;
         for(auto &session : _chat_sdk.GetSessions()) {
+            auto session_info = _chat_sdk.GetSession(session);
             Json::Value session_obj;
             session_obj["session_id"] = session;
-            session_obj["model"] = _chat_sdk.GetSession(session)->_model_name;
-            session_obj["start_time"] = static_cast<int64_t>(_chat_sdk.GetSession(session)->_start_time);
-            session_obj["update_time"] = static_cast<int64_t>(_chat_sdk.GetSession(session)->_update_time);
-            session_obj["message_count"] = _chat_sdk.GetSession(session)->_messages.size();
-            session_obj["first_message"] = _chat_sdk.GetSession(session)->_messages[0]._content;
+            session_obj["session_name"] = session_info->_session_name;
+            session_obj["model"] = session_info->_model_name;
+            session_obj["start_time"] = static_cast<int64_t>(session_info->_start_time);
+            session_obj["update_time"] = static_cast<int64_t>(session_info->_update_time);
+            session_obj["message_count"] = session_info->_messages.size();
+
+            // 历史消息当前按时间倒序返回，因此显式查找最早的用户消息作为会话名称。
+            const ai_chat_sdk::Message *first_user_message = nullptr;
+            for(const auto &message : session_info->_messages) {
+                if(message._role != "user") continue;
+                if(first_user_message == nullptr
+                    || message._timestamp < first_user_message->_timestamp
+                    || (message._timestamp == first_user_message->_timestamp
+                        && message._messageid < first_user_message->_messageid)) {
+                    first_user_message = &message;
+                }
+            }
+            session_obj["first_message"] = first_user_message == nullptr
+                ? "new session"
+                : first_user_message->_content;
             data_obj.append(session_obj);
         }
         response_obj["data"] = data_obj;
@@ -186,6 +226,35 @@ namespace ai_chat_server {
         res.set_content(response_str, "application/json");
         res.status = 200;
     }
+    // 更改当前会话的名称
+    // POST /api/session/name
+    void ChatServer::ChangeSessionName(const httplib::Request& req, httplib::Response& res) {
+        Json::Value request_obj;
+        Json::Reader reader;
+        if(!reader.parse(req.body, request_obj)) {
+            ERR("ChatServer::ChangeSessionName() parse request body failed");
+            BuildERRResponse(res, 400, "parse request body failed");
+            return;
+        }
+        // 获取更新名称
+        std::string session_id = request_obj["session_id"].asString();
+        std::string session_name = request_obj["session_name"].asString();
+        // 更新名称
+        if(!_chat_sdk.UpdateSessionName(session_id, session_name)) {
+            ERR("ChatServer::ChangeSessionName() update session name failed");
+            BuildERRResponse(res, 500, "update session name failed");
+            return;
+        }
+        // 更新成功
+        Json::Value response_obj;
+        response_obj["success"] = true;
+        response_obj["message"] = "change session name success";
+        Json::StreamWriterBuilder builder;
+        builder["indentation"] = "";
+        std::string response_str = Json::writeString(builder, response_obj);
+        res.set_content(response_str, "application/json");
+        res.status = 200;
+    }
     // 更改当前会话的模型参数
     // POST /api/session/model_config
     void ChatServer::ChangeModelConfig(const httplib::Request& req, httplib::Response& res) {
@@ -197,12 +266,28 @@ namespace ai_chat_server {
             return;
         }
         // 获取更新参数
-        std::string session_id = request_obj["session_id"].asString();
-        std::string model_name = request_obj["model"].asString();
-        double temperature = request_obj["temperature"].asDouble();
-        int max_tokens = request_obj["max_tokens"].asInt();
-        bool think = request_obj["think"].asBool();
-        std::string reasoning_effort = request_obj["reasoning_effort"].asString();
+        std::string session_id;
+        std::string model_name;
+        double temperature;
+        int max_tokens;
+        bool think;
+        std::string reasoning_effort;
+        if(!request_obj.isMember("session_id") || !request_obj["session_id"].isString()
+            || !request_obj.isMember("model") || !request_obj["model"].isString()
+            || !request_obj.isMember("temperature") || !request_obj["temperature"].isDouble()
+            || !request_obj.isMember("max_tokens") || !request_obj["max_tokens"].isInt()
+            || !request_obj.isMember("think") || !request_obj["think"].isBool()
+            || !request_obj.isMember("reasoning_effort") || !request_obj["reasoning_effort"].isString()) {
+            ERR("ChatServer::ChangeModelConfig() parse request body failed");
+            BuildERRResponse(res, 400, "parse request body failed");
+            return;
+        }
+        session_id = request_obj["session_id"].asString();
+        model_name = request_obj["model"].asString();
+        temperature = request_obj["temperature"].asDouble();
+        max_tokens = request_obj["max_tokens"].asInt();
+        think = request_obj["think"].asBool();
+        reasoning_effort = request_obj["reasoning_effort"].asString();
         ai_chat_sdk::Params params;
         params["temperature"] = std::to_string(temperature);
         params["max_tokens"] = std::to_string(max_tokens);
@@ -264,8 +349,16 @@ namespace ai_chat_server {
             return;
         }
         // 获取会话id和消息
-        std::string session_id = request_obj["session_id"].asString();
-        std::string message = request_obj["message"].asString();
+        std::string session_id;
+        std::string message;
+        if(!request_obj.isMember("session_id") || !request_obj["session_id"].isString()
+            || !request_obj.isMember("message") || !request_obj["message"].isString()) {
+            ERR("ChatServer::SendMessage() parse request body failed");
+            BuildERRResponse(res, 400, "parse request body failed");
+            return;
+        }
+        session_id = request_obj["session_id"].asString();
+        message = request_obj["message"].asString();
         // 发送消息
         std::string ai_message = _chat_sdk.SendMessage(session_id, message);
         if(ai_message.empty()) {
@@ -298,8 +391,16 @@ namespace ai_chat_server {
             return;
         }
         // 获取会话id和消息
-        std::string session_id = request_obj["session_id"].asString();
-        std::string message = request_obj["message"].asString();
+        std::string session_id;
+        std::string message;
+        if(!request_obj.isMember("session_id") || !request_obj["session_id"].isString()
+            || !request_obj.isMember("message") || !request_obj["message"].isString()) {
+            ERR("ChatServer::SendMessageStream() parse request body failed");
+            BuildERRResponse(res, 400, "parse request body failed");
+            return;
+        }
+        session_id = request_obj["session_id"].asString();
+        message = request_obj["message"].asString();
         if(session_id.empty() || message.empty()) {
             ERR("ChatServer::SendMessageStream() session_id or message is empty");
             BuildERRResponse(res, 400, "session_id or message is empty");
@@ -312,9 +413,19 @@ namespace ai_chat_server {
         res.set_chunked_content_provider("text/event-stream", 
             [this, session_id, message](size_t offset, httplib::DataSink &data_sink)->bool{
                 auto write_callback = [&](const std::string &message, bool flag) {
+                    Json::Value response_obj;
+                    response_obj["success"] = true;
+                    response_obj["message"] = "send message success";
+                    Json::Value data_obj;
+                    data_obj["response"] = message;
+                    data_obj["session_id"] = session_id;
+                    response_obj["data"] = data_obj;
+                    Json::StreamWriterBuilder builder;
+                    builder["indentation"] = "";
+                    std::string response_str = Json::writeString(builder, response_obj);
                     // Json::valueToQuotedString: 对chunk进行Json转换，目的防止chunk中包含一些特殊字符来破坏数据格式，
                     // 比如：在chunk中包含了两个连续的换行，就会影响SSE数据格式
-                    std::string chunk = "data: " + Json::valueToQuotedString(message.c_str()) + "\n\n";
+                    std::string chunk = "data: " + Json::valueToQuotedString(response_str.c_str()) + "\n\n";
                     // 用data_sink.write方法立即将数据发送到客户端
                     data_sink.write(chunk.c_str(), chunk.size());
                     if(flag == true) {
@@ -330,7 +441,7 @@ namespace ai_chat_server {
                 if(!write_callback("", false)) return false;
                 // 发送消息
                 // 阻塞发送消息，直到收到回调函数返回false
-                _chat_sdk.SendMessage(session_id, message);
+                _chat_sdk.SendMessageStream(session_id, message, write_callback);
                 return true;  // 当前数据块已经发送完毕
         });
     }
@@ -341,7 +452,7 @@ namespace ai_chat_server {
             [this](const httplib::Request& req, httplib::Response& res) {
                 GetSessionList(req, res);
         });
-        _server.Get("/api/session/{session_id}/history", 
+        _server.Get(R"(/api/session/([^/]+)/history)",
             [this](const httplib::Request& req, httplib::Response& res) {
                 GetSessionHistory(req, res);
         });
@@ -353,13 +464,17 @@ namespace ai_chat_server {
             [this](const httplib::Request& req, httplib::Response& res) {
                 CreateNewSession(req, res);
         });
-        _server.Delete("/api/session/{session_id}", 
+        _server.Delete(R"(/api/session/([^/]+))",
             [this](const httplib::Request& req, httplib::Response& res) {
                 DeleteSession(req, res);
         });
-        _server.Get("/api/session/{session_id}/history", 
+        _server.Delete("/api/sessions",
             [this](const httplib::Request& req, httplib::Response& res) {
-                GetSessionHistory(req, res);
+                DeleteAllSession(req, res);
+        });
+        _server.Post("/api/session/name",   
+            [this](const httplib::Request& req, httplib::Response& res) {
+                ChangeSessionName(req, res);
         });
         _server.Post("/api/session/model_config", 
             [this](const httplib::Request& req, httplib::Response& res) {
