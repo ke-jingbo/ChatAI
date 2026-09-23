@@ -64,7 +64,7 @@ const state = {
 };
 const defaults = {
   temperature: 0.8,
-  max_tokens: 524288,
+  max_tokens: 393216,
   think: true,
   reasoning_effort: "high",
 };
