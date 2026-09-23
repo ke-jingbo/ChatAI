@@ -132,7 +132,7 @@ namespace ai_chat_sdk {
             // 如果有think元素，则解析think元素
             if(root["message"].isMember("thinking")) {
                 std::string think = root["message"]["thinking"].asString();
-                ret += ("modle think: " + think + "\r\n");
+                // ret += ("modle think: " + think + "\r\n");
             }
             std::string content = root["message"]["content"].asString();
             ret += ("modle content: " + content);

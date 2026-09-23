@@ -110,6 +110,7 @@ namespace ai_chat_server {
         std::string response_str = Json::writeString(builder, response_obj);
         res.set_content(response_str, "application/json");
         res.status = 200;
+        INFO("CreateNewSession() success: {}", session_id);
     }
     // 删除会话
     // DELETE /api/session/${session_id}
@@ -121,6 +122,7 @@ namespace ai_chat_server {
         response_obj["message"] = "delete session success";
         res.set_content(response_obj.toStyledString(), "application/json");
         res.status = 200;
+        INFO("DeleteSession() success: {}", session_id);
     }
     // 删除所有会话
     // DELETE /api/sessions
@@ -131,6 +133,7 @@ namespace ai_chat_server {
         response_obj["message"] = "delete all session success";
         res.set_content(response_obj.toStyledString(), "application/json");
         res.status = 200;
+        INFO("DeleteAllSession() success");
     }
     // 获取会话列表
     // GET /api/sessions
@@ -171,6 +174,7 @@ namespace ai_chat_server {
         std::string response_str = Json::writeString(builder, response_obj);
         res.set_content(response_str, "application/json");
         res.status = 200;
+        INFO("GetSessionList() success");
     }
     // 获取指定会话历史消息
     // GET /api/session/${session_id}/history
@@ -199,6 +203,7 @@ namespace ai_chat_server {
         std::string response_str = Json::writeString(builder, response_obj);
         res.set_content(response_str, "application/json");
         res.status = 200;
+        INFO("GetSessionHistory() success: {}", session_id);
     }
     // 获取可用模型
     // GET /api/models
@@ -225,6 +230,7 @@ namespace ai_chat_server {
         std::string response_str = Json::writeString(builder, response_obj);
         res.set_content(response_str, "application/json");
         res.status = 200;
+        INFO("GetModels() success");
     }
     // 更改当前会话的名称
     // POST /api/session/name
@@ -254,6 +260,7 @@ namespace ai_chat_server {
         std::string response_str = Json::writeString(builder, response_obj);
         res.set_content(response_str, "application/json");
         res.status = 200;
+        INFO("ChangeSessionName() success: {}, {}", session_id, session_name);
     }
     // 更改当前会话的模型参数
     // POST /api/session/model_config
@@ -308,6 +315,7 @@ namespace ai_chat_server {
         std::string response_str = Json::writeString(builder, response_obj);
         res.set_content(response_str, "application/json");
         res.status = 200;
+        INFO("ChangeModelConfig() success: {}, {}", session_id, model_name);
     }
     // 更改当前会话的模型
     // POST /api/session/model
@@ -337,6 +345,7 @@ namespace ai_chat_server {
         std::string response_str = Json::writeString(builder, response_obj);
         res.set_content(response_str, "application/json");
         res.status = 200;
+        INFO("ChangeModel() success: {}, {}", session_id, model_name);
     }
     // 全量返回消息
     // POST /api/message
@@ -379,6 +388,7 @@ namespace ai_chat_server {
         std::string response_str = Json::writeString(builder, response_obj);
         res.set_content(response_str, "application/json");
         res.status = 200;
+        INFO("SendMessage() success: {}, {}", session_id, message);
     }
     // 流式返回消息
     // POST /api/message/async
@@ -444,6 +454,7 @@ namespace ai_chat_server {
                 _chat_sdk.SendMessageStream(session_id, message, write_callback);
                 return true;  // 当前数据块已经发送完毕
         });
+        INFO("SendMessageStream() success: {}", session_id);
     }
 
     // 设置路由
@@ -492,5 +503,6 @@ namespace ai_chat_server {
             [this](const httplib::Request& req, httplib::Response& res) {
                 SendMessageStream(req, res);
         });
+        INFO("SetHttpRoute() success");
     }
 } // namespace ai_chat_server

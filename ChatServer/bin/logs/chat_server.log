@@ -1,24 +1,35 @@
-[20:18:43] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp:  27]: base_url: https://api.deepseek.com
-[20:18:43] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp:  27]: base_url: https://api.xiaomimimo.com
-[20:18:43] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp:  27]: base_url: https://api.moonshot.cn
-[20:18:43] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp:  36]: base_url: http://127.0.0.1:11434
-[20:19:06] [error  ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp: 176]: SessionManager::UpdateSessionName() session not found: ession_1790079529_00000001
-[20:19:06] [error  ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 227]: ChatServer::ChangeSessionName() update session name failed
-[20:19:06] [error  ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/SessionManager.cpp: 176]: SessionManager::UpdateSessionName() session not found: ession_1790079529_00000001
-[20:19:06] [error  ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 227]: ChatServer::ChangeSessionName() update session name failed
-[20:42:19] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp:  27]: base_url: https://api.deepseek.com
-[20:42:19] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp:  27]: base_url: https://api.xiaomimimo.com
-[20:42:19] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp:  27]: base_url: https://api.moonshot.cn
-[20:42:19] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp:  36]: base_url: http://127.0.0.1:11434
-[20:47:11] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp:  27]: base_url: https://api.deepseek.com
-[20:47:11] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp:  27]: base_url: https://api.xiaomimimo.com
-[20:47:11] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp:  27]: base_url: https://api.moonshot.cn
-[20:47:11] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp:  36]: base_url: http://127.0.0.1:11434
-[20:48:35] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp:  27]: base_url: https://api.deepseek.com
-[20:48:35] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp:  27]: base_url: https://api.xiaomimimo.com
-[20:48:35] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp:  27]: base_url: https://api.moonshot.cn
-[20:48:35] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp:  36]: base_url: http://127.0.0.1:11434
-[20:57:50] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp:  27]: base_url: https://api.deepseek.com
-[20:57:50] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp:  27]: base_url: https://api.xiaomimimo.com
-[20:57:50] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp:  27]: base_url: https://api.moonshot.cn
-[20:57:50] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp:  36]: base_url: http://127.0.0.1:11434
+[08:38:20] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp:  27]: base_url: https://api.deepseek.com
+[08:38:20] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp:  27]: base_url: https://api.xiaomimimo.com
+[08:38:20] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp:  27]: base_url: https://api.moonshot.cn
+[08:38:20] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp:  36]: base_url: http://127.0.0.1:11434
+[08:38:20] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 506]: SetHttpRoute() success
+[08:38:24] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 233]: GetModels() success
+[08:38:24] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[08:38:24] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 206]: GetSessionHistory() success: session_1790082091_00000001
+[08:38:25] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 233]: GetModels() success
+[08:38:25] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[08:38:25] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 206]: GetSessionHistory() success: session_1790082091_00000001
+[08:38:36] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 457]: SendMessageStream() success: session_1790082091_00000001
+[08:38:45] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[09:17:13] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/DeepseekProvider.cpp:  27]: base_url: https://api.deepseek.com
+[09:17:13] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/MimoProvider.cpp:  27]: base_url: https://api.xiaomimimo.com
+[09:17:13] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/KimiProvider.cpp:  27]: base_url: https://api.moonshot.cn
+[09:17:13] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/SDK/src/OllamaLLMProvider.cpp:  36]: base_url: http://127.0.0.1:11434
+[09:17:13] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 506]: SetHttpRoute() success
+[09:17:44] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[09:42:10] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 233]: GetModels() success
+[09:42:10] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[09:43:04] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 233]: GetModels() success
+[09:43:04] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[09:43:05] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 206]: GetSessionHistory() success: session_1790082091_00000001
+[09:43:26] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 233]: GetModels() success
+[09:43:26] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[09:46:38] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 233]: GetModels() success
+[09:46:38] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[09:48:55] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 233]: GetModels() success
+[09:48:55] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
+[09:48:56] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 206]: GetSessionHistory() success: session_1790082091_00000001
+[09:51:48] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 113]: CreateNewSession() success: session_1790128308_00000002
+[09:51:48] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 318]: ChangeModelConfig() success: session_1790128308_00000002, kimi-k3
+[09:51:48] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 457]: SendMessageStream() success: session_1790128308_00000002
+[09:51:52] [info   ] [chat_server] [/home/kjb/Code/ChatAI-SDK/ChatAI/ChatServer/ChatServer.cpp: 177]: GetSessionList() success
