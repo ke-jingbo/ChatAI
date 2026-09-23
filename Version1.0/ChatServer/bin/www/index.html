@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>ChatServer</title>
+    <link rel="stylesheet" href="./styles.css?v=20260923-2" />
+    <script src="./app.js?v=20260923-2" defer></script>
+  </head>
+  <body>
+    <aside id="sidebar" aria-label="会话侧栏">
+      <header class="brand">
+        <span>ChatServer</span
+        ><button
+          id="collapse"
+          class="icon"
+          aria-label="收起侧栏"
+          data-icon="panel"
+        ></button>
+      </header>
+      <button id="new-chat" class="nav-button">
+        <span data-icon="edit"></span>新对话<span class="shortcut">Ctrl K</span>
+      </button>
+      <label class="search"
+        ><span data-icon="search"></span
+        ><input id="search" placeholder="搜索会话" aria-label="搜索会话"
+      /></label>
+      <div class="section-label">
+        <span>最近会话</span>
+        <div>
+          <button
+            id="refresh"
+            class="icon"
+            title="刷新会话"
+            aria-label="刷新会话"
+            data-icon="refresh"
+          ></button
+          ><button
+            id="clear"
+            class="icon"
+            title="清空所有会话"
+            aria-label="清空所有会话"
+            data-icon="trash"
+          ></button>
+        </div>
+      </div>
+      <nav id="sessions" aria-label="会话列表"></nav>
+      <footer class="sidebar-footer">
+        <button id="connection" class="connection" title="连接设置">
+          <span id="status-dot"></span><span id="status">正在连接</span></button
+        ><button
+          id="theme"
+          class="icon"
+          title="切换亮色主题"
+          aria-label="切换亮色主题"
+          data-icon="sun"
+        ></button>
+      </footer>
+    </aside>
+    <button id="backdrop" aria-label="关闭侧栏" hidden></button>
+    <main>
+      <header class="topbar">
+        <button
+          id="expand"
+          class="icon"
+          aria-label="展开侧栏"
+          data-icon="panel"
+        ></button>
+        <button
+          id="rename-title"
+          class="title-button"
+          type="button"
+          title="更改会话名"
+          aria-label="更改会话名"
+        >
+          <span data-icon="folder"></span><span id="rename-title-text">新对话</span
+          ><span class="title-edit" data-icon="rename"></span>
+        </button>
+        <h1 id="title">新对话</h1>
+        <span id="activity" role="status"></span>
+      </header>
+      <section id="scroll-area" aria-label="对话内容">
+        <div id="messages"></div>
+        <div id="history-error" hidden>
+          <p>历史消息加载失败</p>
+          <button id="retry-history" class="secondary">重新加载</button>
+        </div>
+      </section>
+      <div class="composer-region">
+        <div id="welcome"><h2>今天有什么计划？</h2></div>
+        <div id="composer-context">
+          <span data-icon="chat"></span><span id="context-text">新对话</span>
+        </div>
+        <form id="composer">
+          <label class="sr-only" for="message">消息</label>
+          <textarea
+            id="message"
+            placeholder="询问 ChatServer"
+            rows="1"
+            maxlength="12000"
+          ></textarea>
+          <div class="composer-toolbar">
+            <div class="composer-left">
+              <button
+                id="name-new"
+                type="button"
+                class="icon"
+                title="创建并命名会话"
+                aria-label="创建并命名会话"
+                data-icon="plus"
+              ></button
+              ><label class="stream"
+                ><input id="stream" type="checkbox" checked /><span
+                  >流式回复</span
+                ></label
+              >
+            </div>
+            <div class="composer-right">
+              <button
+                id="model-toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="model-panel"
+              >
+                <span id="model-label">选择模型</span
+                ><span class="chevron">⌄</span>
+              </button>
+              <button
+                id="send"
+                class="send"
+                type="submit"
+                title="发送"
+                aria-label="发送消息"
+                data-icon="arrow"
+                disabled
+              ></button>
+            </div>
+          </div>
+        </form>
+        <section id="model-panel" hidden aria-label="模型与参数">
+          <div class="popover-heading">
+            <span data-icon="sliders"></span><strong>模型与参数</strong
+            ><button
+              id="close-model"
+              class="icon"
+              aria-label="关闭参数面板"
+              data-icon="close"
+            ></button>
+          </div>
+          <label class="field">模型<select id="model"></select></label>
+          <p id="model-desc" class="note"></p>
+          <form id="parameters">
+            <fieldset>
+              <legend>思考强度</legend>
+              <div class="efforts">
+                <label
+                  ><input type="radio" name="effort" value="low" /><span
+                    >low</span
+                  ></label
+                ><label
+                  ><input
+                    type="radio"
+                    name="effort"
+                    value="high"
+                    checked
+                  /><span>high</span></label
+                ><label
+                  ><input type="radio" name="effort" value="max" /><span
+                    >max</span
+                  ></label
+                >
+              </div>
+            </fieldset>
+            <label class="think-row"
+              >思考模式<input id="think" type="checkbox" checked
+            /></label>
+            <details>
+              <summary>更多参数</summary>
+              <div class="parameter-grid">
+                <label class="field"
+                  >Temperature<input
+                    id="temperature"
+                    type="number"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value="0.8"
+                    required /></label
+                ><label class="field"
+                  >Max tokens<input
+                    id="tokens"
+                    type="number"
+                    min="1"
+                    max="2147483647"
+                    step="1"
+                    value="393216"
+                    required
+                /></label>
+              </div>
+            </details>
+            <p id="config-note" class="note">参数应用于同名模型。</p>
+            <button class="primary apply" type="submit">应用参数</button>
+          </form>
+        </section>
+        <p class="composer-hint">
+          <span id="send-state">Enter 发送 · Shift + Enter 换行</span
+          ><span id="count"></span>
+        </p>
+      </div>
+    </main>
+    <dialog id="name-dialog" aria-labelledby="name-title">
+      <form id="name-form">
+        <header>
+          <h2 id="name-title">创建会话</h2>
+          <button
+            type="button"
+            class="icon"
+            data-close
+            aria-label="关闭"
+            data-icon="close"
+          ></button>
+        </header>
+        <label class="field"
+          >会话名称<input
+            id="name"
+            value="new session"
+            maxlength="80"
+            required
+            autocomplete="off"
+        /></label>
+        <p id="name-note" class="note">
+          保留 new session，首条消息将自动成为名称。
+        </p>
+        <footer>
+          <button type="button" class="secondary" data-close>取消</button
+          ><button class="primary" type="submit">保存</button>
+        </footer>
+      </form>
+    </dialog>
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+      <form id="confirm-form">
+        <h2 id="confirm-title">删除会话？</h2>
+        <p id="confirm-text"></p>
+        <footer>
+          <button type="button" class="secondary" data-close>取消</button
+          ><button id="confirm-submit" type="submit" class="danger">
+            删除
+          </button>
+        </footer>
+      </form>
+    </dialog>
+    <dialog id="connection-dialog" aria-labelledby="connection-title">
+      <form id="connection-form">
+        <header>
+          <h2 id="connection-title">连接设置</h2>
+          <button
+            type="button"
+            class="icon"
+            data-close
+            aria-label="关闭"
+            data-icon="close"
+          ></button>
+        </header>
+        <label class="field"
+          >服务地址<input
+            id="api-base"
+            type="url"
+            placeholder="留空使用当前站点"
+        /></label>
+        <p class="note">默认连接当前站点。其他地址需要服务器支持跨域。</p>
+        <footer>
+          <button type="button" class="secondary" data-close>取消</button
+          ><button type="submit" class="primary">连接</button>
+        </footer>
+      </form>
+    </dialog>
+    <div id="toast" role="status"></div>
+  </body>
+</html>
