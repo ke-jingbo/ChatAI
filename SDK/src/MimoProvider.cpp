@@ -42,7 +42,7 @@ namespace ai_chat_sdk {
         // 1. 读取请求参数
         // 如果有温度和最大token数，则使用指定的参数 否则使用默认值
         double temperature = 0.8;
-        int max_tokens = 2048;
+        int max_tokens = 20480;
         std::string think = "enabled";
         if(request_params.find("temperature") != request_params.end()) {
             temperature = std::stod(request_params["temperature"]);
@@ -76,7 +76,7 @@ namespace ai_chat_sdk {
         builder["indentation"] = "";
         std::string request_str;
         request_str = Json::writeString(builder, request_obj);
-        DBG("request_str: {}", request_str);
+        INFO("request_str: {}", request_str);
         return request_str;
     }
 

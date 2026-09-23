@@ -26,7 +26,18 @@
       "desc": "DeepSeek Flash",
       "config": {
         "temperature": 0.8,
-        "max_tokens": 2048,
+        "max_tokens": 524288,
+        "think": true,
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "name": "deepseek-v4-pro",
+      "provider": "DeepseekProvider",
+      "desc": "DeepSeek v4 Pro",
+      "config": {
+        "temperature": 0.8,
+        "max_tokens": 524288,
         "think": true,
         "reasoning_effort": "high"
       }
@@ -37,7 +48,7 @@
       "desc": "MiMo v2.5 Pro",
       "config": {
         "temperature": 0.8,
-        "max_tokens": 2048,
+        "max_tokens": 524288,
         "think": true,
         "reasoning_effort": "high"
       }
@@ -48,7 +59,7 @@
       "desc": "Kimi K3",
       "config": {
         "temperature": 0.8,
-        "max_tokens": 2048,
+        "max_tokens": 524288,
         "think": true,
         "reasoning_effort": "high"
       }
@@ -59,7 +70,7 @@
       "desc": "Kimi K2.6",
       "config": {
         "temperature": 0.8,
-        "max_tokens": 2048,
+        "max_tokens": 524288,
         "think": true,
         "reasoning_effort": "high"
       }

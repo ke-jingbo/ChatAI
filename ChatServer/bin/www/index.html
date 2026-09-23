@@ -67,6 +67,16 @@
           aria-label="展开侧栏"
           data-icon="panel"
         ></button>
+        <button
+          id="rename-title"
+          class="title-button"
+          type="button"
+          title="更改会话名"
+          aria-label="更改会话名"
+        >
+          <span data-icon="folder"></span><span id="rename-title-text">新对话</span
+          ><span class="title-edit" data-icon="rename"></span>
+        </button>
         <h1 id="title">新对话</h1>
         <span id="activity" role="status"></span>
       </header>
@@ -184,7 +194,7 @@
                     min="1"
                     max="2147483647"
                     step="1"
-                    value="2048"
+                    value="524288"
                     required
                 /></label>
               </div>

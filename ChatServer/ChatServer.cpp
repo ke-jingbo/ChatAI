@@ -151,6 +151,14 @@ namespace ai_chat_server {
             session_obj["start_time"] = static_cast<int64_t>(session_info->_start_time);
             session_obj["update_time"] = static_cast<int64_t>(session_info->_update_time);
             session_obj["message_count"] = session_info->_messages.size();
+            const auto model = _chat_sdk.GetModel(session_info->_model_name);
+            Json::Value model_config;
+            model_config["model"] = model._name;
+            model_config["temperature"] = model._config._temperature;
+            model_config["max_tokens"] = model._config._max_tokens;
+            model_config["think"] = model._config._think;
+            model_config["reasoning_effort"] = model._config._reasoning_effort;
+            session_obj["model_config"] = model_config;
 
             // 历史消息当前按时间倒序返回，因此显式查找最早的用户消息作为会话名称。
             const ai_chat_sdk::Message *first_user_message = nullptr;

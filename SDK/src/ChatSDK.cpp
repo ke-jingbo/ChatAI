@@ -164,6 +164,11 @@ namespace ai_chat_sdk {
 
     // 发送消息
     std::string ChatSDK::SendMessage(const std::string session_id, const std::string message) {
+        // 先检查session是否存在
+        if(_session_manager.GetSession(session_id) == nullptr) {
+            ERR("ChatSDK::SendMessage() session is not found: {}", session_id);
+            return "";
+        }
         // 获取模型和消息
         std::string modle_name = (_session_manager.GetSession(session_id))->_model_name;
         std::vector<Message> messages;
@@ -191,6 +196,11 @@ namespace ai_chat_sdk {
     }
     // 发送消息流式
     std::string ChatSDK::SendMessageStream(const std::string session_id, const std::string message, StreamCallback callback) {
+        // 先检查session是否存在
+        if(_session_manager.GetSession(session_id) == nullptr) {
+            ERR("ChatSDK::SendMessageStream() session is not found: {}", session_id);
+            return "";
+        }
         // 获取模型和消息
         std::string modle_name = (_session_manager.GetSession(session_id))->_model_name;
         std::vector<Message> messages;

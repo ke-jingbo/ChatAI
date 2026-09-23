@@ -64,7 +64,7 @@ const state = {
 };
 const defaults = {
   temperature: 0.8,
-  max_tokens: 524288,
+  max_tokens: 2048,
   think: true,
   reasoning_effort: "high",
 };
@@ -292,7 +292,6 @@ function cacheSessionConfigs() {
 async function refreshSessions() {
   state.sessions = list(await api("/api/sessions"));
   if (state.current && !current()) home();
-  cacheSessionConfigs();
   updateHeader();
   renderSessions();
 }

@@ -40,7 +40,7 @@ namespace ai_chat_sdk {
     std::string KimiProvider::BuildRequestBody(Model model, Messages messages, Params request_params, bool isstream) {
         // 1. 读取请求参数
         // 如果有最大token数，则使用指定的参数 否则使用默认值
-        int max_tokens = 2048;
+        int max_tokens = 20480;
         std::string reasoning_effort = "high";  // low high max
         std::string think = "enabled";
         if(request_params.find("max_tokens") != request_params.end()) {
@@ -77,7 +77,7 @@ namespace ai_chat_sdk {
         builder["indentation"] = "";
         std::string request_str;
         request_str = Json::writeString(builder, request_obj);
-        DBG("request_str: {}", request_str);
+        INFO("request_str: {}", request_str);
         return request_str;
     }
 

@@ -42,7 +42,7 @@ namespace ai_chat_sdk {
         // 1. 读取请求参数
         // 如果有温度和最大token数，则使用指定的参数 否则使用默认值
         double temperature = 0.8;
-        int max_tokens = 2048;
+        int max_tokens = 20480;
         std::string reasoning_effort = "high";
         std::string think = "enabled";
         if(request_params.find("temperature") != request_params.end()) {
@@ -81,7 +81,7 @@ namespace ai_chat_sdk {
         builder["indentation"] = "";
         std::string request_str;
         request_str = Json::writeString(builder, request_obj);
-        DBG("request_str: {}", request_str);
+        INFO("request_str: {}", request_str);
         return request_str;
     }
 
@@ -97,7 +97,7 @@ namespace ai_chat_sdk {
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
         client.set_connection_timeout(10, 0);  // 设置超时时间为10秒
-        client.set_read_timeout(60, 0);        // 设置读取超时时间为60秒
+        client.set_read_timeout(600, 0);  // 设置读取超时时间为600秒
         // 构建请求头
         httplib::Headers headers = {
             {"Content-Type", "application/json"},
@@ -115,6 +115,7 @@ namespace ai_chat_sdk {
             ERR("response_str: {}", res->body);
             return "";
         }
+        INFO("response_str: {}", res->body);
 
         // 4. 如果是正常的响应，则解析响应内容
         // 先将res的body转换为json对象
@@ -154,7 +155,7 @@ namespace ai_chat_sdk {
         // 3. 构建client 发送POST请求
         httplib::Client client(_base_url);
         client.set_connection_timeout(60, 0);  // 设置超时时间为30秒
-        client.set_read_timeout(300, 0);        // 设置读取超时时间为120秒
+        client.set_read_timeout(600, 0);        // 设置读取超时时间为600秒
         // 设置请求头
         httplib::Headers headers = {
             {"Content-Type", "application/json"},
