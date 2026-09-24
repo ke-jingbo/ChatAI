@@ -320,12 +320,18 @@ bool ParseModel(const Json::Value &value, const std::set<std::string> &provider_
         }
     }
 
-    if(model_config._temperature < 0.0 || model_config._temperature > 2.0) {
-        *error = "temperature for model " + name + " must be in the range 0..2";
+    const bool is_mimo_provider = provider == "MimoProvider";
+    const double max_temperature = is_mimo_provider ? 1.5 : 2.0;
+    const int max_tokens = is_mimo_provider ? 131072 : 393216;
+    const char *temperature_range = is_mimo_provider ? "0..1.5" : "0..2";
+    if(model_config._temperature < 0.0 || model_config._temperature > max_temperature) {
+        *error = "temperature for model " + name + " must be in the range " +
+                 temperature_range;
         return false;
     }
-    if(model_config._max_tokens <= 0) {
-        *error = "max_tokens for model " + name + " must be greater than zero";
+    if(model_config._max_tokens <= 0 || model_config._max_tokens > max_tokens) {
+        *error = "max_tokens for model " + name + " must be in the range 1.." +
+                 std::to_string(max_tokens);
         return false;
     }
     static const std::set<std::string> reasoning_levels = {"low", "medium", "high", "max"};

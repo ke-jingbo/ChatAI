@@ -48,7 +48,7 @@
       "desc": "MiMo v2.5 Pro",
       "config": {
         "temperature": 0.8,
-        "max_tokens": 393216,
+        "max_tokens": 131072,
         "think": true,
         "reasoning_effort": "high"
       }

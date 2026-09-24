@@ -69,8 +69,8 @@ namespace ai_chat_sdk {
         request_obj["max_completion_tokens"] = max_tokens;
         request_obj["stream"] = isstream;
         Json::Value think_obj;
-        think_obj["think"] = think;
-        request_obj["think"] = think_obj;
+        think_obj["type"] = think;
+        request_obj["thinking"] = think_obj;
         // 4. 序列化请求参数
         Json::StreamWriterBuilder builder;
         builder["indentation"] = "";
