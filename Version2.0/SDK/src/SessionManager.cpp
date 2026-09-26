@@ -4,8 +4,8 @@
 #include <iomanip>
 
 namespace ai_chat_sdk {
-    SessionManager::SessionManager(std::string dbName) :_data_manager(dbName) {
-        auto sessions = _data_manager.QueryAllSession();
+    SessionManager::SessionManager(std::string dbName, std::string user_id) :_data_manager(dbName), _user_id(user_id) {
+        auto sessions = _data_manager.QueryAllSession(user_id);
         for(auto &session : sessions) {
             _sessions.emplace(session->_session_id, session);
         }
@@ -15,11 +15,11 @@ namespace ai_chat_sdk {
     // 创建会话id
     std::string SessionManager::CreateSessionId() {
         // session_timestamp_count
-        // session_1234567890_00000001
+        // session_user_id_1234567890_00000001
         time_t current_time = time(nullptr);
         _session_counter.fetch_add(1);
         std::ostringstream oss;
-        oss << "session_" << current_time << "_" << std::setw(8) << std::setfill('0') << _session_counter;
+        oss << "session_" << _user_id << "_" << current_time << "_" << std::setw(8) << std::setfill('0') << _session_counter;
         return oss.str();
     }
     // 创建消息id
@@ -52,7 +52,7 @@ namespace ai_chat_sdk {
         _sessions.emplace(session_id, session);
         _mutex.unlock();
         //  数据库中创建
-        if(!_data_manager.InsertSession(*session)) {
+        if(!_data_manager.InsertSession(*session, _user_id)) {
             ERR("SessionManager::CreateSession() insert session to database failed");
             return "";
         }
@@ -219,7 +219,6 @@ namespace ai_chat_sdk {
         });
         std::vector<std::string> session_ids;
         for(auto &p : session_list) session_ids.push_back(p.second);
-        assert(_data_manager.QueryAllSessionId().size() == session_ids.size());
         return session_ids;
     }
 
@@ -235,6 +234,6 @@ namespace ai_chat_sdk {
         _sessions.clear();
         _session_counter = 0;
         _mutex.unlock();
-        _data_manager.ClearAllSession();
+        _data_manager.ClearAllSession(_user_id);
     }
 }

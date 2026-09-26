@@ -15,6 +15,7 @@ namespace ai_chat_sdk {
         std::mutex _mutex;                                                    // 会话列表锁              
         std::atomic<int64_t> _session_counter = {0};                       // 会话计数器
         DataManager _data_manager;                                           // 数据库管理器
+        std::string _user_id;                                                // 用户id
 
     public:
         // 创建会话id
@@ -23,7 +24,7 @@ namespace ai_chat_sdk {
         std::string CreateMessageId(std::string session_id);
 
     public:
-        SessionManager(std::string dbName);
+        SessionManager(std::string dbName, std::string user_id);
         // 创建会话
         std::string CreateSession(const std::string &model_name, const std::string &session_name);
         // 删除会话
@@ -44,7 +45,7 @@ namespace ai_chat_sdk {
         std::vector<std::string> GetSessions();
         // 获取会话数量
         int64_t GetSessionCount();
-        // 清空会话列表
+        // 清空所有会话
         void ClearAllSessions();
     };
 }

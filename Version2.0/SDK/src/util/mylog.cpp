@@ -19,7 +19,15 @@ namespace mylog {
                 Logger::_logger = spdlog::stdout_color_mt(log_name);
             }
             else {
-                Logger::_logger = spdlog::basic_logger_mt(log_name, log_path);
+                // 单个日志文件达到 10 MiB 后滚动，最多保留 3 个历史文件。
+                constexpr std::size_t max_file_size = 10 * 1024 * 1024;
+                constexpr std::size_t max_files = 3;
+                Logger::_logger = spdlog::rotating_logger_mt(
+                    log_name,
+                    log_path,
+                    max_file_size,
+                    max_files
+                );
             }
             // 设置日志格式
             // %H:%M:%S 时间

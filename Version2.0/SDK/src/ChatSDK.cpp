@@ -7,7 +7,7 @@
 
 
 namespace ai_chat_sdk {
-    ChatSDK::ChatSDK(std::string db_name) :_session_manager(db_name), _llm_manager() {}
+    ChatSDK::ChatSDK(std::string db_name) :_user_manager(db_name), _llm_manager() {}
 
     // 注册所支持的LLM提供者/模型
     bool ChatSDK::RegisterAndInitLLMProvider(ProviderConfigs configs) {
@@ -124,56 +124,111 @@ namespace ai_chat_sdk {
         return _llm_manager.GetInitModels();
     }
 
+
+    // 用户相关操作
+    // 创建用户
+    std::string ChatSDK::CreateUser(const std::string user_name, 
+                                    const std::string user_avatar_path, 
+                                    const std::string email, 
+                                    const std::string password, 
+                                    const std::string cookie_id) {
+        return _user_manager.CreateUser(user_name, user_avatar_path, email, password, cookie_id);
+    }
+    // 删除用户
+    void ChatSDK::DeleteUser(const std::string user_id) {
+        _user_manager.DeleteUser(user_id);
+    }
+    // 登出用户
+    bool ChatSDK::LogoutUser(const std::string user_id) {
+        return _user_manager.LogoutUser(user_id);
+    }
+    // 获取用户
+    std::string ChatSDK::GetUserId(const std::string cookie_id) {
+        return _user_manager.GetUserId(cookie_id);
+    }
+    std::shared_ptr<User> ChatSDK::GetUser(const std::string user_id) {
+        return _user_manager.GetUser(user_id);
+    }
+    std::shared_ptr<User> ChatSDK::LoginUser(const std::string email, const std::string password) {
+        return _user_manager.LoginUser(email, password);
+    }
+    // 更新用户头像
+    bool ChatSDK::UpdateUserAvatar(const std::string user_id, const std::string avatar_path) {
+        return _user_manager.UpdateUserAvatar(user_id, avatar_path);
+    }
+    // 更新用户名称
+    bool ChatSDK::UpdateUserName(const std::string user_id, const std::string user_name) {
+        return _user_manager.UpdateUserName(user_id, user_name);
+    }
+    // 更新用户邮箱
+    bool ChatSDK::UpdateUserEmail(const std::string user_id, const std::string email) {
+        return _user_manager.UpdateUserEmail(user_id, email);
+    }
+    // 更新用户密码
+    bool ChatSDK::UpdateUserPassword(const std::string user_id, const std::string password) {
+        return _user_manager.UpdateUserPassword(user_id, password);
+    }
+    // 忘记密码
+    bool ChatSDK::ForgetUserPassword(const std::string email, const std::string password) {
+        return _user_manager.ForgetUserPassword(email, password);
+    }
+    // 获取用户个数
+    int64_t ChatSDK::GetOnlineUserCount() {
+        return _user_manager.GetOnlineUserCount();
+    }
+
+
+    // 会话相关操作
     // 创建会话
-    std::string ChatSDK::CreateSession(const std::string model_name, const std::string session_name) {
-        return _session_manager.CreateSession(model_name, session_name);
+    std::string ChatSDK::CreateSession(const std::string user_id, const std::string model_name, const std::string session_name) {
+        return _user_manager.CreateSession(user_id, model_name, session_name);
     }
     // 删除会话
-    void ChatSDK::DeleteSession(const std::string session_id) {
-        _session_manager.DeleteSession(session_id);
+    void ChatSDK::DeleteSession(const std::string user_id, const std::string session_id) {
+        _user_manager.DeleteSession(user_id, session_id);
     }
     // 更新会话名称
-    bool ChatSDK::UpdateSessionName(const std::string session_id, const std::string session_name) {
-        return _session_manager.UpdateSessionName(session_id, session_name);
+    bool ChatSDK::UpdateSessionName(const std::string user_id, const std::string session_id, const std::string session_name) {
+        return _user_manager.UpdateSessionName(user_id, session_id, session_name);
     }
     // 更新会话模型
-    bool ChatSDK::UpdateSessionModel(const std::string session_id, const std::string model_name) {
+    bool ChatSDK::UpdateSessionModel(const std::string user_id, const std::string session_id, const std::string model_name) {
         if(_llm_manager.IsModelAvailable(model_name) == false) {
             ERR("ChatSDK::UpdateSessionModel() model is not available: {}", model_name);
             return false;
         }
-        return _session_manager.UpdateSession(session_id, model_name);
+        return _user_manager.UpdateSession(user_id, session_id, model_name);
     }
     // 更新会话模型的参数
-    bool ChatSDK::UpdateSessionModelConfig(const std::string session_id, Params &params) {
-        std::string model_name = (_session_manager.GetSession(session_id))->_model_name;
+    bool ChatSDK::UpdateSessionModelConfig(const std::string user_id, const std::string session_id, Params &params) {
+        std::string model_name = (_user_manager.GetSession(user_id, session_id))->_model_name;
         return _llm_manager.UpdateModelConfig(model_name, params);
     }
     // 获取所有会话列表
-    std::vector<std::string> ChatSDK::GetSessions() {
-        return _session_manager.GetSessions();
+    std::vector<std::string> ChatSDK::GetSessions(const std::string user_id) {
+        return _user_manager.GetSessions(user_id);
     }
     // 获取指定会话
-    std::shared_ptr<Session> ChatSDK::GetSession(const std::string session_id) {
-        return _session_manager.GetSession(session_id);
+    std::shared_ptr<Session> ChatSDK::GetSession(const std::string user_id, const std::string session_id) {
+        return _user_manager.GetSession(user_id, session_id);
     }
-    // 清空所有会话
-    void ChatSDK::ClearAllSessions() {
-        _session_manager.ClearAllSessions();
+    // 清空指定用户所有会话
+    void ChatSDK::ClearAllSessions(const std::string user_id) {
+        _user_manager.ClearAllSessions(user_id);
     }
 
     // 发送消息
-    std::string ChatSDK::SendMessage(const std::string session_id, const std::string message) {
+    std::string ChatSDK::SendMessage(const std::string user_id, const std::string session_id, const std::string message) {
         // 先检查session是否存在
-        if(_session_manager.GetSession(session_id) == nullptr) {
-            ERR("ChatSDK::SendMessage() session is not found: {}", session_id);
+        if(_user_manager.GetSession(user_id, session_id) == nullptr) {
+            ERR("ChatSDK::SendMessage() session is not found: {}:{}", user_id, session_id);
             return "";
         }
         // 获取模型和消息
-        std::string modle_name = (_session_manager.GetSession(session_id))->_model_name;
+        std::string modle_name = (_user_manager.GetSession(user_id, session_id))->_model_name;
         std::vector<Message> messages;
         Model model = _llm_manager.GetModel(modle_name);
-        messages = _session_manager.GetSessionMessages(session_id);
+        messages = _user_manager.GetSessionMessages(user_id, session_id);
         Message req_message("user", message);
         messages.push_back(req_message);
         // 初始化请求参数
@@ -190,22 +245,22 @@ namespace ai_chat_sdk {
         }
         // 更新会话消息
         Message res_message("assistant", res);
-        _session_manager.UpdateSessionMessages(session_id, req_message);
-        _session_manager.UpdateSessionMessages(session_id, res_message);
+        _user_manager.UpdateSessionMessages(user_id, session_id, req_message);
+        _user_manager.UpdateSessionMessages(user_id, session_id, res_message);
         return res;
     }
     // 发送消息流式
-    std::string ChatSDK::SendMessageStream(const std::string session_id, const std::string message, StreamCallback callback) {
+    std::string ChatSDK::SendMessageStream(const std::string user_id, const std::string session_id, const std::string message, StreamCallback callback) {
         // 先检查session是否存在
-        if(_session_manager.GetSession(session_id) == nullptr) {
-            ERR("ChatSDK::SendMessageStream() session is not found: {}", session_id);
+        if(_user_manager.GetSession(user_id, session_id) == nullptr) {
+            ERR("ChatSDK::SendMessageStream() session is not found: {}:{}", user_id, session_id);
             return "";
         }
         // 获取模型和消息
-        std::string modle_name = (_session_manager.GetSession(session_id))->_model_name;
+        std::string modle_name = (_user_manager.GetSession(user_id, session_id))->_model_name;
         std::vector<Message> messages;
         Model model = _llm_manager.GetModel(modle_name);
-        messages = _session_manager.GetSessionMessages(session_id);
+        messages = _user_manager.GetSessionMessages(user_id, session_id);
         Message req_message("user", message);
         messages.push_back(req_message);
         // 初始化请求参数
@@ -222,8 +277,8 @@ namespace ai_chat_sdk {
         }
         // 更新会话消息
         Message res_message("assistant", res);
-        _session_manager.UpdateSessionMessages(session_id, req_message);        
-        _session_manager.UpdateSessionMessages(session_id, res_message);
+        _user_manager.UpdateSessionMessages(user_id, session_id, req_message);        
+        _user_manager.UpdateSessionMessages(user_id, session_id, res_message);
         return res;
     }
 

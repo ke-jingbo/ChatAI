@@ -1,0 +1,3 @@
+/home/kjb/Code/ChatAI-SDK/ChatAI/Version2.0/ChatServer/build/CMakeFiles/AIChatServer.dir
+/home/kjb/Code/ChatAI-SDK/ChatAI/Version2.0/ChatServer/build/CMakeFiles/edit_cache.dir
+/home/kjb/Code/ChatAI-SDK/ChatAI/Version2.0/ChatServer/build/CMakeFiles/rebuild_cache.dir

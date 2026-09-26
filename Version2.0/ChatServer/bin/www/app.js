@@ -48,6 +48,8 @@ const storage = {
 };
 const state = {
   base: storage.get("chatserver-api-base") || "",
+  user: null,
+  authMode: "login",
   models: [],
   sessions: [],
   current: "",
@@ -61,7 +63,20 @@ const state = {
   menu: "",
   rename: null,
   deletion: null,
+  verifiedEmails: new Map(),
+  pendingVerification: null,
 };
+const codeTimers = new Map();
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const dialogClosures = new WeakMap();
+class ApiError extends Error {
+  constructor(message, status = 0, data = null) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data;
+  }
+}
 const defaults = {
   temperature: 0.8,
   max_tokens: 393216,
@@ -107,6 +122,64 @@ function toast(message) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $("toast").classList.remove("visible"), 3500);
 }
+function cancelDialogClosure(dialog) {
+  const closure = dialogClosures.get(dialog);
+  if (!closure) return;
+  clearTimeout(closure.fallback);
+  dialog.removeEventListener("transitionend", closure.onTransitionEnd);
+  dialogClosures.delete(dialog);
+}
+function closeDialogImmediately(dialog) {
+  cancelDialogClosure(dialog);
+  if (dialog.open) dialog.close();
+  dialog.classList.remove("dialog-visible", "dialog-closing");
+}
+function openDialog(dialogOrId) {
+  const dialog =
+    typeof dialogOrId === "string" ? $(dialogOrId) : dialogOrId;
+  if (!dialog || dialog.open) return;
+  cancelDialogClosure(dialog);
+  dialog.classList.remove("dialog-visible", "dialog-closing");
+  dialog.showModal();
+  // 强制浏览器提交初始透明状态，再启动进入过渡。
+  void dialog.offsetWidth;
+  dialog.classList.add("dialog-visible");
+}
+function closeDialog(dialogOrId, afterClose) {
+  const dialog =
+    typeof dialogOrId === "string" ? $(dialogOrId) : dialogOrId;
+  if (!dialog?.open) {
+    afterClose?.();
+    return;
+  }
+  if (dialog.classList.contains("dialog-closing")) return;
+
+  let fallback;
+  const finish = () => {
+    const closure = dialogClosures.get(dialog);
+    if (!closure || closure.finish !== finish) return;
+    cancelDialogClosure(dialog);
+    if (dialog.open) dialog.close();
+    dialog.classList.remove("dialog-visible", "dialog-closing");
+    afterClose?.();
+  };
+  const onTransitionEnd = (event) => {
+    if (event.target === dialog && event.propertyName === "opacity") finish();
+  };
+
+  if (reducedMotion.matches) {
+    dialog.close();
+    dialog.classList.remove("dialog-visible", "dialog-closing");
+    afterClose?.();
+    return;
+  }
+
+  dialog.classList.remove("dialog-visible");
+  dialog.classList.add("dialog-closing");
+  dialog.addEventListener("transitionend", onTransitionEnd);
+  fallback = setTimeout(finish, 260);
+  dialogClosures.set(dialog, { fallback, finish, onTransitionEnd });
+}
 function connection(online, label) {
   state.online = online;
   $("status").textContent = label;
@@ -142,14 +215,15 @@ function controls() {
     "retry-history",
     "connection",
     "stream",
+    "user-menu",
   ])
     $(id).disabled = state.busy;
   document
     .querySelectorAll(
-      "#sessions button, dialog button, dialog input, #parameters input, #parameters button",
+      "#sessions button, dialog button, dialog input, #parameters input, #parameters button, #auth-view button, #auth-view input",
     )
     .forEach((el) => {
-      el.disabled = state.busy;
+      el.disabled = state.busy || el.dataset.cooldown === "true";
     });
   $("clear").disabled = state.busy || !state.sessions.length;
   $("rename-title").disabled = state.busy || !state.current;
@@ -161,7 +235,7 @@ function controls() {
     ? "正在处理，请稍候…"
     : "Enter 发送 · Shift + Enter 换行";
 }
-async function api(path, method = "GET", body) {
+async function api(path, method = "GET", body, options = {}) {
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort(),
@@ -171,6 +245,7 @@ async function api(path, method = "GET", body) {
     const response = await fetch(state.base + path, {
       method,
       signal: controller.signal,
+      credentials: "include",
       headers: body === undefined ? {} : { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
@@ -179,10 +254,18 @@ async function api(path, method = "GET", body) {
     try {
       data = JSON.parse(raw);
     } catch {
-      throw new Error(raw.slice(0, 160) || "服务器返回了无效响应");
+      data = { success: response.ok, message: raw.slice(0, 160) };
     }
-    if (!response.ok || data.success === false)
-      throw new Error(data.message || "请求失败：" + response.status);
+    if (!response.ok || data.success === false) {
+      const error = new ApiError(
+        data.message || "请求失败：" + response.status,
+        response.status,
+        data.data,
+      );
+      if (response.status === 401 && !options.allowUnauthorized)
+        showAuth("login", "登录状态已失效，请重新登录");
+      throw error;
+    }
     return data.data;
   } catch (error) {
     if (error.name === "AbortError")
@@ -195,10 +278,13 @@ async function api(path, method = "GET", body) {
 function theme(value) {
   document.documentElement.dataset.theme = value;
   storage.set("chatserver-appearance", value);
-  $("theme").innerHTML = icon(value === "dark" ? "sun" : "moon");
+  const themeIcon = icon(value === "dark" ? "sun" : "moon");
   const label = value === "dark" ? "切换亮色主题" : "切换暗色主题";
-  $("theme").title = label;
-  $("theme").setAttribute("aria-label", label);
+  for (const id of ["theme", "auth-theme"]) {
+    $(id).innerHTML = themeIcon;
+    $(id).title = label;
+    $(id).setAttribute("aria-label", label);
+  }
 }
 function closeSidebar() {
   document.body.classList.remove("mobile-open");
@@ -350,7 +436,7 @@ function openName(session = null) {
   $("name-title").textContent = session ? "重命名会话" : "创建会话";
   $("name").value = session ? title(session) : "new session";
   $("name-note").hidden = Boolean(session);
-  $("name-dialog").showModal();
+  openDialog("name-dialog");
   $("name").focus();
   $("name").select();
 }
@@ -395,7 +481,7 @@ function confirmDelete(session) {
   $("confirm-text").textContent = session
     ? "“" + title(session) + "”及其历史消息将永久删除。"
     : "所有会话及历史消息将永久删除，此操作无法撤销。";
-  $("confirm-dialog").showModal();
+  openDialog("confirm-dialog");
 }
 
 // Model output is rendered through DOM text nodes. No model HTML is executed.
@@ -675,11 +761,16 @@ async function streamReply(id, message, onChunk) {
     const response = await fetch(state.base + "/api/message/async", {
       method: "POST",
       signal: controller.signal,
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: id, message }),
     });
-    if (!response.ok || !response.body)
-      throw new Error((await response.text()).slice(0, 160) || "流式请求失败");
+    if (!response.ok || !response.body) {
+      const message = (await response.text()).slice(0, 160) || "流式请求失败";
+      if (response.status === 401)
+        showAuth("login", "登录状态已失效，请重新登录");
+      throw new ApiError(message, response.status);
+    }
     reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "",
@@ -826,6 +917,212 @@ function configPanel() {
     ? "参数应用于同名模型。"
     : "当前显示建议值；点击应用后生效，影响同名模型。";
 }
+function normalizeUser(data) {
+  const user = data?.user || data;
+  return user?.user_id ? user : null;
+}
+function avatarUrl(path) {
+  if (!path) return "./images/avatar.png";
+  if (/^(?:https?:|data:)/i.test(path)) return path;
+  if (!state.base) return path;
+  return state.base + (path.startsWith("/") ? path : "/" + path);
+}
+function updateUserUI() {
+  if (!state.user) return;
+  const name = state.user.user_name || "用户";
+  const email = state.user.email || "未设置邮箱";
+  const avatar = avatarUrl(state.user.avatar_path);
+  $("user-name").textContent = name;
+  $("user-email").textContent = email;
+  $("user-avatar").src = avatar;
+  $("account-name").textContent = name;
+  $("account-email").textContent = email;
+  $("account-avatar").src = avatar;
+  $("account-id").textContent = state.user.user_id || "—";
+  $("profile-name").value = state.user.user_name || "";
+  $("settings-email").textContent = email;
+}
+function resetChatState() {
+  state.models = [];
+  state.sessions = [];
+  state.current = "";
+  state.model = "";
+  state.menu = "";
+  state.rename = null;
+  state.deletion = null;
+  state.configs.clear();
+  state.drafts.clear();
+  state.draftConfig = null;
+  $("model").replaceChildren();
+  $("messages").replaceChildren();
+  $("message").value = "";
+  $("welcome").hidden = false;
+  $("history-error").hidden = true;
+  updateHeader();
+  renderSessions();
+  resize();
+}
+function setAuthMode(mode) {
+  state.authMode = mode === "register" ? "register" : "login";
+  const registering = state.authMode === "register";
+  $("auth-tabs").dataset.mode = state.authMode;
+  $("login-tab").setAttribute("aria-selected", String(!registering));
+  $("register-tab").setAttribute("aria-selected", String(registering));
+  $("login-form").hidden = registering;
+  $("register-form").hidden = !registering;
+  $("auth-title").textContent = registering ? "创建账号" : "欢迎回来";
+  $("auth-subtitle").textContent = registering
+    ? "几步即可开始新的对话"
+    : "登录后继续你的对话";
+  $(registering ? "register-name" : "login-email").focus();
+}
+function resetCodeButton(id) {
+  const timer = codeTimers.get(id);
+  if (timer) clearInterval(timer);
+  codeTimers.delete(id);
+  const button = $(id);
+  delete button.dataset.cooldown;
+  button.textContent = "发送验证码";
+  button.disabled = state.busy;
+}
+function startCodeCountdown(id, seconds = 60) {
+  resetCodeButton(id);
+  const button = $(id);
+  let remaining = Math.max(1, Math.ceil(Number(seconds) || 60));
+  button.dataset.cooldown = "true";
+  const render = () => {
+    button.disabled = true;
+    button.textContent = `${remaining} 秒后重发`;
+  };
+  render();
+  const timer = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      resetCodeButton(id);
+      return;
+    }
+    render();
+  }, 1000);
+  codeTimers.set(id, timer);
+}
+async function sendEmailCode(email, purpose, buttonId) {
+  if (!email) throw new Error("请先输入邮箱");
+  try {
+    const data = await api("/api/auth/email/code", "POST", { email, purpose });
+    state.verifiedEmails.delete(purpose);
+    startCodeCountdown(buttonId, data?.retry_after || 60);
+  } catch (error) {
+    if (error.status === 429 && error.data?.retry_after)
+      startCodeCountdown(buttonId, error.data.retry_after);
+    throw error;
+  }
+}
+async function verifyEmailCode(email, purpose, code) {
+  if (state.verifiedEmails.get(purpose) === email) return;
+  if (!/^\d{6}$/.test(code)) throw new Error("请输入六位邮箱验证码");
+  await api("/api/auth/email/verify", "POST", { email, purpose, code });
+  state.verifiedEmails.set(purpose, email);
+}
+function openVerification(email, purpose, onVerified) {
+  state.pendingVerification = { email, purpose, onVerified };
+  state.verifiedEmails.delete(purpose);
+  $("verification-code").value = "";
+  $("verification-status").textContent = "";
+  $("verification-status").classList.remove("error");
+  $("verification-description").textContent = `验证码将发送到 ${email}`;
+  resetCodeButton("verification-send-code");
+  openDialog("verification-dialog");
+}
+function closeAccountChangeDialog(id) {
+  closeDialog(id, () => {
+    if (state.user && document.body.classList.contains("authenticated")) {
+      updateUserUI();
+      openDialog("account-dialog");
+    }
+  });
+}
+async function verificationAction(label, work) {
+  if (state.busy) return;
+  state.busy = true;
+  $("verification-status").textContent = label;
+  $("verification-status").classList.remove("error");
+  controls();
+  try {
+    await work();
+  } catch (error) {
+    $("verification-status").textContent = error.message || "验证失败，请重试";
+    $("verification-status").classList.add("error");
+  } finally {
+    state.busy = false;
+    controls();
+  }
+}
+function showAuth(mode = "login", message = "") {
+  state.user = null;
+  state.pendingVerification = null;
+  document.body.classList.remove("authenticated", "auth-pending");
+  document.body.classList.add("auth-required");
+  document.body.classList.remove("mobile-open");
+  $("backdrop").hidden = true;
+  document
+    .querySelectorAll("dialog[open]")
+    .forEach((dialog) => closeDialogImmediately(dialog));
+  $("auth-status").textContent = message;
+  $("auth-status").classList.remove("error");
+  $("login-password").value = "";
+  $("register-password").value = "";
+  $("register-confirm").value = "";
+  $("register-code").value = "";
+  state.verifiedEmails.clear();
+  resetChatState();
+  setAuthMode(mode);
+}
+async function showApp(user) {
+  state.user = user;
+  document.body.classList.remove("auth-required", "auth-pending");
+  document.body.classList.add("authenticated");
+  $("auth-status").textContent = "";
+  $("auth-status").classList.remove("error");
+  updateUserUI();
+  try {
+    await connect();
+  } catch (error) {
+    toast(error.message || "会话加载失败，请稍后重试");
+  }
+}
+async function authAction(label, work) {
+  if (state.busy) return;
+  state.busy = true;
+  $("auth-status").textContent = label;
+  $("auth-status").classList.remove("error");
+  controls();
+  try {
+    await work();
+  } catch (error) {
+    $("auth-status").textContent = error.message || "请求失败，请重试";
+    $("auth-status").classList.add("error");
+  } finally {
+    state.busy = false;
+    controls();
+  }
+}
+async function forgotPasswordAction(label, work) {
+  if (state.busy) return;
+  state.busy = true;
+  $("forgot-password-status").textContent = label;
+  $("forgot-password-status").classList.remove("error");
+  controls();
+  try {
+    await work();
+  } catch (error) {
+    $("forgot-password-status").textContent =
+      error.message || "请求失败，请重试";
+    $("forgot-password-status").classList.add("error");
+  } finally {
+    state.busy = false;
+    controls();
+  }
+}
 async function connect() {
   connection(false, "正在连接");
   try {
@@ -849,9 +1146,140 @@ async function connect() {
     throw error;
   }
 }
+async function bootstrap() {
+  connection(false, "正在连接");
+  try {
+    const user = normalizeUser(
+      await api("/api/auth/info", "GET", undefined, {
+        allowUnauthorized: true,
+      }),
+    );
+    if (!user) throw new ApiError("用户信息无效", 401);
+    await showApp(user);
+  } catch (error) {
+    const message =
+      error.status === 401 ? "" : error.message || "暂时无法连接服务器";
+    showAuth("login", message);
+  }
+}
 
 $("theme").onclick = () =>
   theme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+$("auth-theme").onclick = $("theme").onclick;
+$("login-tab").onclick = () => {
+  $("auth-status").textContent = "";
+  $("auth-status").classList.remove("error");
+  setAuthMode("login");
+};
+$("register-tab").onclick = () => {
+  $("auth-status").textContent = "";
+  $("auth-status").classList.remove("error");
+  setAuthMode("register");
+};
+$("register-email").oninput = () => {
+  state.verifiedEmails.delete("register");
+  $("register-code").value = "";
+  resetCodeButton("register-send-code");
+};
+$("register-code").oninput = () => {
+  state.verifiedEmails.delete("register");
+};
+$("register-send-code").onclick = () => {
+  if (!$("register-email").reportValidity()) return;
+  authAction("正在发送验证码…", async () => {
+    await sendEmailCode(
+      $("register-email").value.trim(),
+      "register",
+      "register-send-code",
+    );
+    $("auth-status").textContent = "验证码已发送，请检查邮箱";
+  });
+};
+$("login-form").onsubmit = (event) => {
+  event.preventDefault();
+  authAction("正在登录…", async () => {
+    const user = normalizeUser(
+      await api("/api/auth/login", "POST", {
+        email: $("login-email").value.trim(),
+        password: $("login-password").value,
+      }),
+    );
+    if (!user) throw new Error("登录响应缺少用户信息");
+    await showApp(user);
+  });
+};
+$("open-forgot-password").onclick = () => {
+  $("forgot-password-form").reset();
+  $("forgot-password-email").value = $("login-email").value.trim();
+  $("forgot-password-status").textContent = "";
+  $("forgot-password-status").classList.remove("error");
+  resetCodeButton("forgot-password-send-code");
+  openDialog("forgot-password-dialog");
+  $("forgot-password-email").focus();
+};
+$("forgot-password-email").oninput = () => {
+  $("forgot-password-code").value = "";
+  resetCodeButton("forgot-password-send-code");
+};
+$("forgot-password-send-code").onclick = () => {
+  if (!$("forgot-password-email").reportValidity()) return;
+  forgotPasswordAction("正在发送验证码…", async () => {
+    await sendEmailCode(
+      $("forgot-password-email").value.trim(),
+      "forget_password",
+      "forgot-password-send-code",
+    );
+    $("forgot-password-status").textContent = "验证码已发送，请检查邮箱";
+  });
+};
+$("forgot-password-form").onsubmit = (event) => {
+  event.preventDefault();
+  forgotPasswordAction("正在重置密码…", async () => {
+    const email = $("forgot-password-email").value.trim();
+    const code = $("forgot-password-code").value.trim();
+    const password = $("forgot-password-value").value;
+    if (!/^\d{6}$/.test(code)) throw new Error("请输入六位邮箱验证码");
+    if (password !== $("forgot-password-confirm").value)
+      throw new Error("两次输入的新密码不一致");
+
+    // 验证码由重置接口验证并立即消费，不能在这里提前调用通用验证接口。
+    await api("/api/auth/forget_password", "POST", {
+      email,
+      code,
+      password,
+    });
+    $("login-email").value = email;
+    $("login-password").value = "";
+    closeDialog("forgot-password-dialog", () => {
+      $("auth-status").textContent = "密码已重置，请使用新密码登录";
+      $("auth-status").classList.remove("error");
+      $("login-password").focus();
+    });
+  });
+};
+$("register-form").onsubmit = (event) => {
+  event.preventDefault();
+  authAction("正在创建账号…", async () => {
+    const email = $("register-email").value.trim();
+    const password = $("register-password").value;
+    if (password !== $("register-confirm").value)
+      throw new Error("两次输入的密码不一致");
+    await verifyEmailCode(
+      email,
+      "register",
+      $("register-code").value.trim(),
+    );
+    const user = normalizeUser(
+      await api("/api/auth/register", "POST", {
+        user_name: $("register-name").value.trim(),
+        email,
+        password,
+      }),
+    );
+    if (!user) throw new Error("注册响应缺少用户信息");
+    await showApp(user);
+  });
+};
 $("collapse").onclick = () => {
   if (matchMedia("(max-width:760px)").matches) closeSidebar();
   else document.body.classList.add("collapsed");
@@ -864,6 +1292,11 @@ $("expand").onclick = () => {
   }
 };
 $("backdrop").onclick = closeSidebar;
+$("user-menu").onclick = () => {
+  if (!state.user || state.busy) return;
+  updateUserUI();
+  openDialog("account-dialog");
+};
 $("new-chat").onclick = home;
 $("name-new").onclick = () => openName();
 $("rename-title").onclick = () => state.current && openName(current());
@@ -901,7 +1334,7 @@ $("name-form").onsubmit = (event) => {
       resize();
       closeSidebar();
     }
-    $("name-dialog").close();
+    closeDialog("name-dialog");
   });
 };
 $("confirm-form").onsubmit = (event) => {
@@ -921,7 +1354,7 @@ $("confirm-form").onsubmit = (event) => {
       home();
     }
     renderSessions();
-    $("confirm-dialog").close();
+    closeDialog("confirm-dialog");
     toast(id === "*" ? "全部会话已清空" : "会话已删除");
   });
 };
@@ -1006,7 +1439,7 @@ $("message").onkeydown = (event) => {
 };
 $("connection").onclick = () => {
   $("api-base").value = state.base;
-  $("connection-dialog").showModal();
+  openDialog("connection-dialog");
 };
 $("connection-form").onsubmit = (event) => {
   event.preventDefault();
@@ -1026,15 +1459,161 @@ $("connection-form").onsubmit = (event) => {
     $("message").value = "";
     home();
     await connect();
-    $("connection-dialog").close();
+    closeDialog("connection-dialog");
+  });
+};
+$("profile-form").onsubmit = (event) => {
+  event.preventDefault();
+  action("保存用户名…", async () => {
+    const userName = $("profile-name").value.trim();
+    if (!userName) throw new Error("用户名不能为空");
+    if (userName === state.user.user_name) throw new Error("用户名没有变化");
+    await api("/api/user/name", "POST", { user_name: userName });
+    state.user.user_name = userName;
+    updateUserUI();
+    toast("用户名已更新");
+  });
+};
+$("open-email-change").onclick = () => {
+  const currentEmail = state.user.email;
+  closeDialog("account-dialog", () => {
+    openVerification(currentEmail, "change_email", () => {
+      $("change-email-value").value = "";
+      openDialog("change-email-dialog");
+    });
+  });
+};
+$("change-email-form").onsubmit = (event) => {
+  event.preventDefault();
+  const email = $("change-email-value").value.trim();
+  if (email === state.user.email) {
+    toast("新邮箱不能与当前邮箱相同");
+    return;
+  }
+  action("更新邮箱…", async () => {
+    await api("/api/user/email", "POST", { email });
+    state.user.email = email;
+    updateUserUI();
+    closeAccountChangeDialog("change-email-dialog");
+    toast("邮箱已更新");
+  });
+};
+$("open-password-change").onclick = () => {
+  const currentEmail = state.user.email;
+  closeDialog("account-dialog", () => {
+    openVerification(currentEmail, "change_password", () => {
+      $("change-password-form").reset();
+      openDialog("change-password-dialog");
+    });
+  });
+};
+$("change-password-form").onsubmit = (event) => {
+  event.preventDefault();
+  const password = $("new-password").value;
+  if (password !== $("confirm-password").value) {
+    toast("两次输入的密码不一致");
+    return;
+  }
+  action("更新密码…", async () => {
+    await api("/api/user/password", "POST", { password });
+    $("change-password-form").reset();
+    closeAccountChangeDialog("change-password-dialog");
+    toast("密码已更新");
+  });
+};
+$("verification-send-code").onclick = () => {
+  const pending = state.pendingVerification;
+  if (!pending) return;
+  verificationAction("正在发送验证码…", async () => {
+    await sendEmailCode(
+      pending.email,
+      pending.purpose,
+      "verification-send-code",
+    );
+    $("verification-status").textContent = "验证码已发送，请检查邮箱";
+  });
+};
+$("verification-code").oninput = () => {
+  const pending = state.pendingVerification;
+  if (pending) state.verifiedEmails.delete(pending.purpose);
+};
+$("verification-form").onsubmit = (event) => {
+  event.preventDefault();
+  verificationAction("正在验证…", async () => {
+    const pending = state.pendingVerification;
+    if (!pending) throw new Error("当前没有待验证的操作");
+    await verifyEmailCode(
+      pending.email,
+      pending.purpose,
+      $("verification-code").value.trim(),
+    );
+    const onVerified = pending.onVerified;
+    state.verifiedEmails.delete(pending.purpose);
+    state.pendingVerification = null;
+    closeDialog("verification-dialog", onVerified);
+  });
+};
+for (const id of ["cancel-email-change", "cancel-email-change-x"])
+  $(id).onclick = () => closeAccountChangeDialog("change-email-dialog");
+for (const id of ["cancel-password-change", "cancel-password-change-x"])
+  $(id).onclick = () => closeAccountChangeDialog("change-password-dialog");
+function cancelVerification() {
+  state.pendingVerification = null;
+  closeDialog("verification-dialog", () => {
+    if (state.user && document.body.classList.contains("authenticated")) {
+      updateUserUI();
+      openDialog("account-dialog");
+    }
+  });
+}
+for (const id of ["cancel-verification", "cancel-verification-x"])
+  $(id).onclick = cancelVerification;
+for (const id of ["cancel-forgot-password", "cancel-forgot-password-x"])
+  $(id).onclick = () => closeDialog("forgot-password-dialog");
+$("forgot-password-dialog").addEventListener("close", () => {
+  $("forgot-password-form").reset();
+  $("forgot-password-status").textContent = "";
+  $("forgot-password-status").classList.remove("error");
+  resetCodeButton("forgot-password-send-code");
+});
+$("verification-dialog").addEventListener("close", () => {
+  state.pendingVerification = null;
+  $("verification-code").value = "";
+  $("verification-status").textContent = "";
+  resetCodeButton("verification-send-code");
+});
+for (const [id, close] of [
+  ["change-email-dialog", () => closeAccountChangeDialog("change-email-dialog")],
+  [
+    "change-password-dialog",
+    () => closeAccountChangeDialog("change-password-dialog"),
+  ],
+]) {
+  $(id).addEventListener("cancel", (event) => {
+    if (state.busy) return;
+    event.preventDefault();
+    close();
+  });
+}
+$("verification-dialog").addEventListener("cancel", (event) => {
+  if (state.busy) return;
+  event.preventDefault();
+  cancelVerification();
+});
+$("logout").onclick = () => {
+  action("正在退出…", async () => {
+    await api("/api/auth/logout", "POST");
+    showAuth("login", "你已安全退出");
   });
 };
 document.querySelectorAll("[data-close]").forEach((button) => {
-  button.onclick = () => button.closest("dialog").close();
+  button.onclick = () => closeDialog(button.closest("dialog"));
 });
 document.querySelectorAll("dialog").forEach((dialog) => {
   dialog.addEventListener("cancel", (event) => {
-    if (state.busy) event.preventDefault();
+    if (event.defaultPrevented) return;
+    event.preventDefault();
+    if (!state.busy) closeDialog(dialog);
   });
 });
 document.addEventListener("click", (event) => {
@@ -1060,4 +1639,4 @@ document.addEventListener("keydown", (event) => {
 });
 theme(storage.get("chatserver-appearance") === "dark" ? "dark" : "light");
 resize();
-action("连接中…", connect);
+bootstrap();

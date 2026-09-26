@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <vector>
 #include <ctime>
@@ -8,6 +9,9 @@
 #include <memory>
 #include <atomic>
 #include <iomanip>
+#include <stdexcept>
+
+#include <openssl/rand.h>
 
 namespace ai_chat_sdk {
     struct Message;
@@ -112,4 +116,29 @@ namespace ai_chat_sdk {
     using Params = std::map<std::string, std::string>;
     using StreamCallback = std::function<void(const std::string &message, bool flag)>;  
     // 处理流式信息的回调函数 第一个参数表示消息内容，第二个参数表示是否是最后一条消息
+
+    // 用户管理
+    struct User {
+        std::string _user_id;               // 用户的id
+        std::string _user_name;             // 用户的名称
+        std::string _user_avatar_path;      // 用户的头像路径
+        std::string _email;                 // 用户的邮箱
+        std::string _password;              // 用户的密码
+        time_t _create_time;                // 用户的创建时间
+        std::string _cookie_id;             // 用户的cookie id
+
+        User(const std::string user_id = "", 
+            const std::string user_name = "", 
+            const std::string user_avatar_path = "", 
+            const std::string email = "", 
+            const std::string password = "", 
+            const std::string cookie_id = "")
+            :_user_id(user_id)
+            ,_user_name(user_name)
+            ,_user_avatar_path(user_avatar_path)
+            ,_email(email)
+            ,_password(password)
+            ,_create_time(time(nullptr))
+            ,_cookie_id(cookie_id) {}
+    };
 }  // end namespace ai_chat_sdk

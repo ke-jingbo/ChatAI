@@ -17,6 +17,8 @@ find_package(gflags REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONCPP REQUIRED IMPORTED_TARGET jsoncpp)
+pkg_check_modules(SODIUM REQUIRED IMPORTED_TARGET libsodium)
+pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl)
 
 # 查找已经安装到 /usr/local 的聊天 SDK
 find_path(AI_CHAT_SDK_INCLUDE_DIR
@@ -34,7 +36,11 @@ if(NOT AI_CHAT_SDK_INCLUDE_DIR OR NOT AI_CHAT_SDK_LIBRARY)
 endif()
 
 # server.cpp 提供 main 函数，ChatServer.cpp 实现 HTTP 服务。
-add_executable(AIChatServer server.cpp ChatServer.cpp)
+add_executable(AIChatServer
+    src/server.cpp
+    src/ChatServer.cpp
+    src/EmailVerification.cpp
+)
 # build 目录保存构建中间文件，最终可执行程序单独输出到 bin 目录。
 set_target_properties(AIChatServer PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
@@ -44,13 +50,18 @@ target_compile_features(AIChatServer PRIVATE cxx_std_17)
 # cpp-httplib 访问 HTTPS Provider 时需要启用 OpenSSL 支持。
 target_compile_definitions(AIChatServer PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
 # 使用已安装 SDK 的公开头文件。
-target_include_directories(AIChatServer PRIVATE ${AI_CHAT_SDK_INCLUDE_DIR})
+target_include_directories(AIChatServer PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${AI_CHAT_SDK_INCLUDE_DIR}
+)
 # 链接 SDK、命令行解析、日志、JSON、数据库和网络加密依赖。
 target_link_libraries(AIChatServer PRIVATE
     ${AI_CHAT_SDK_LIBRARY}
+    PkgConfig::SODIUM
     gflags
     spdlog::spdlog
     PkgConfig::JSONCPP
+    PkgConfig::LIBCURL
     sqlite3
     OpenSSL::SSL
     OpenSSL::Crypto
