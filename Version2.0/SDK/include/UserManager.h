@@ -36,7 +36,7 @@ namespace ai_chat_sdk {
         std::shared_ptr<User> GetUser(const std::string &user_id);
         std::shared_ptr<User> LoginUser(const std::string &email, const std::string &password);
         // 更新用户头像
-        bool UpdateUserAvatar(const std::string &user_id, const std::string &avatar_path);
+        bool UpdateUserAvatar(const std::string &user_id, const std::string &avatar_path, std::shared_ptr<std::string> img);
         // 更新用户名称
         bool UpdateUserName(const std::string &user_id, const std::string &user_name);
         // 更新用户邮箱

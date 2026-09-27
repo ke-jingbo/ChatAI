@@ -2,6 +2,8 @@
 #include "../include/util/mylog.h"
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <memory>
 
 namespace ai_chat_sdk {
     UserManager::UserManager(std::string dbName) :_data_manager(dbName), _user_counter(0) {
@@ -136,7 +138,7 @@ namespace ai_chat_sdk {
         return user;
     }
     // 更新用户头像
-    bool UserManager::UpdateUserAvatar(const std::string &user_id, const std::string &avatar_path) {
+    bool UserManager::UpdateUserAvatar(const std::string &user_id, const std::string &avatar_path, std::shared_ptr<std::string> img) {
         _mutex.lock();
         if(_users.find(user_id) == _users.end()) {
             ERR("UserManager::UpdateUserAvatar() user not found: {}", user_id);
@@ -144,6 +146,19 @@ namespace ai_chat_sdk {
             return false;
         }
         (_users[user_id])->_user_avatar_path = avatar_path;
+        std::ofstream avatar_file(avatar_path, std::ios::binary);
+        if(!avatar_file.is_open()) {
+            ERR("ChatServer::ChangeUserAvatar() open avatar file failed");
+            _mutex.unlock();
+            return false;
+        }
+        avatar_file.write(img->data(), img->size());
+        if(!avatar_file.good()) {
+            ERR("ChatServer::ChangeUserAvatar() write avatar file failed");
+            _mutex.unlock();
+            return false;
+        }
+        avatar_file.close();
         _mutex.unlock();
         // 数据库中更新
         if(!_data_manager.UpdateUserAvatar(user_id, avatar_path)) {

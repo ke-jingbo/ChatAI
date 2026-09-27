@@ -153,8 +153,8 @@ namespace ai_chat_sdk {
         return _user_manager.LoginUser(email, password);
     }
     // 更新用户头像
-    bool ChatSDK::UpdateUserAvatar(const std::string user_id, const std::string avatar_path) {
-        return _user_manager.UpdateUserAvatar(user_id, avatar_path);
+    bool ChatSDK::UpdateUserAvatar(const std::string user_id, const std::string avatar_path, std::shared_ptr<std::string> img) {
+        return _user_manager.UpdateUserAvatar(user_id, avatar_path, img);
     }
     // 更新用户名称
     bool ChatSDK::UpdateUserName(const std::string user_id, const std::string user_name) {

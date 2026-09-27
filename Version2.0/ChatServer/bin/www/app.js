@@ -19,8 +19,12 @@ const icons = {
     '<path d="M4 7h6m4 0h6M4 17h10m4 0h2"/><circle cx="12" cy="7" r="2"/><circle cx="16" cy="17" r="2"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"/>',
   moon: '<path d="M20 15A8 8 0 0 1 9 4 8 8 0 1 0 20 15Z"/>',
+  eye: '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/>',
+  eyeOff:
+    '<path d="m3 3 18 18M10.6 6.2A11 11 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-3 3.7M6.2 6.2C3.4 8 2 12 2 12s3.5 6 10 6a11 11 0 0 0 3.1-.4M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
   spark:
     '<path d="M12 3c2-2 5 0 5 2 4-1 6 3 4 6 3 3 0 7-3 7 0 4-5 5-7 2-4 2-7-1-6-4-4-2-3-6 0-8-1-3 4-6 7-5Z"/><path d="m8 10 2 2-2 2m5 1h3"/>',
+  bolt: '<path d="m13 2-8 12h6l-1 8 9-13h-6Z"/>',
 };
 function icon(name) {
   return (
@@ -58,17 +62,28 @@ const state = {
   loading: false,
   online: false,
   configs: new Map(),
+  modelConfigs: new Map(),
   draftConfig: null,
   drafts: new Map(),
   menu: "",
   rename: null,
   deletion: null,
+  avatarRevision: 0,
+  pendingAvatarFile: null,
+  avatarPreviewUrl: "",
   verifiedEmails: new Map(),
   pendingVerification: null,
 };
 const codeTimers = new Map();
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const dialogClosures = new WeakMap();
+const panelClosures = new WeakMap();
+let advancedAnimation = null;
+const defaultSidebarWidth = 258;
+const minimumSidebarWidth = 220;
+const maximumSidebarWidth = 420;
+const maximumAvatarBytes = 5 * 1024 * 1024;
+const supportedAvatarTypes = new Set(["image/png", "image/jpeg"]);
 class ApiError extends Error {
   constructor(message, status = 0, data = null) {
     super(message);
@@ -83,6 +98,27 @@ const defaults = {
   think: true,
   reasoning_effort: "high",
 };
+function normalizeModelConfig(config) {
+  if (!config || typeof config !== "object") return null;
+  const temperature = Number(config.temperature);
+  const maxTokens = Number(config.max_tokens);
+  const reasoningEffort = ["low", "high", "max"].includes(
+    config.reasoning_effort,
+  )
+    ? config.reasoning_effort
+    : defaults.reasoning_effort;
+  return {
+    temperature: Number.isFinite(temperature)
+      ? temperature
+      : defaults.temperature,
+    max_tokens:
+      Number.isInteger(maxTokens) && maxTokens > 0
+        ? maxTokens
+        : defaults.max_tokens,
+    think: typeof config.think === "boolean" ? config.think : defaults.think,
+    reasoning_effort: reasoningEffort,
+  };
+}
 const list = (value) => (Array.isArray(value) ? value : []);
 const current = () =>
   state.sessions.find((s) => s.session_id === state.current);
@@ -209,7 +245,6 @@ function controls() {
     "clear",
     "name-new",
     "rename-title",
-    "model",
     "model-toggle",
     "send",
     "retry-history",
@@ -220,7 +255,7 @@ function controls() {
     $(id).disabled = state.busy;
   document
     .querySelectorAll(
-      "#sessions button, dialog button, dialog input, #parameters input, #parameters button, #auth-view button, #auth-view input",
+      "#sessions button, dialog button, dialog input, .composer-popover button, .composer-popover input, #auth-view button, #auth-view input",
     )
     .forEach((el) => {
       el.disabled = state.busy || el.dataset.cooldown === "true";
@@ -275,6 +310,62 @@ async function api(path, method = "GET", body, options = {}) {
     clearTimeout(timer);
   }
 }
+async function uploadAvatar(file) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000);
+  try {
+    const response = await fetch(state.base + "/api/user/avatar", {
+      method: "POST",
+      signal: controller.signal,
+      credentials: "include",
+      headers: { "Content-Type": file.type },
+      // 该接口接收图片原始二进制，不能使用 JSON 或 multipart/form-data 包装。
+      body: file,
+    });
+    const raw = await response.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = { success: response.ok, message: raw.slice(0, 160) };
+    }
+    if (!response.ok || data.success === false) {
+      if (response.status === 401)
+        showAuth("login", "登录状态已失效，请重新登录");
+      throw new ApiError(
+        data.message || "头像上传失败：" + response.status,
+        response.status,
+        data.data,
+      );
+    }
+  } catch (error) {
+    if (error.name === "AbortError") throw new Error("头像上传超时，请稍后重试");
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+function clearPendingAvatar() {
+  if (state.avatarPreviewUrl) URL.revokeObjectURL(state.avatarPreviewUrl);
+  state.pendingAvatarFile = null;
+  state.avatarPreviewUrl = "";
+  $("avatar-preview").removeAttribute("src");
+  $("avatar-confirm-name").textContent = "";
+  $("avatar-confirm-size").textContent = "";
+}
+function avatarFileSize(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+function openAvatarConfirmation(file) {
+  clearPendingAvatar();
+  state.pendingAvatarFile = file;
+  state.avatarPreviewUrl = URL.createObjectURL(file);
+  $("avatar-preview").src = state.avatarPreviewUrl;
+  $("avatar-confirm-name").textContent = file.name || "新头像";
+  $("avatar-confirm-size").textContent = avatarFileSize(file.size);
+  openDialog("avatar-confirm-dialog");
+}
 function theme(value) {
   document.documentElement.dataset.theme = value;
   storage.set("chatserver-appearance", value);
@@ -286,13 +377,347 @@ function theme(value) {
     $(id).setAttribute("aria-label", label);
   }
 }
+function setPasswordVisibility(input, button, visible) {
+  input.type = visible ? "text" : "password";
+  button.innerHTML = icon(visible ? "eyeOff" : "eye");
+  button.setAttribute("aria-pressed", String(visible));
+  button.setAttribute("aria-label", visible ? "隐藏密码" : "显示密码");
+  button.title = visible ? "隐藏密码" : "显示密码";
+}
+function hideAllPasswords(root = document) {
+  root.querySelectorAll(".password-toggle").forEach((button) => {
+    const input = button.parentElement.querySelector("input");
+    if (input) setPasswordVisibility(input, button, false);
+  });
+}
+function initializePasswordToggles() {
+  document.querySelectorAll('input[type="password"]').forEach((input) => {
+    const wrapper = document.createElement("span");
+    wrapper.className = "password-input";
+    input.before(wrapper);
+    wrapper.append(input);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "password-toggle";
+    setPasswordVisibility(input, button, false);
+    button.addEventListener("click", () => {
+      setPasswordVisibility(input, button, input.type === "password");
+      input.focus({ preventScroll: true });
+    });
+    wrapper.append(button);
+
+    const form = input.closest("form");
+    if (form && !form.dataset.passwordResetBound) {
+      form.dataset.passwordResetBound = "true";
+      form.addEventListener("reset", () => hideAllPasswords(form));
+    }
+  });
+}
 function closeSidebar() {
   document.body.classList.remove("mobile-open");
   $("backdrop").hidden = true;
 }
-function closePanel() {
-  $("model-panel").hidden = true;
+function sidebarWidthLimit() {
+  return Math.max(
+    minimumSidebarWidth,
+    Math.min(maximumSidebarWidth, Math.floor(window.innerWidth * 0.45)),
+  );
+}
+function setSidebarWidth(width, persist = false) {
+  const maximum = sidebarWidthLimit();
+  const next = Math.min(maximum, Math.max(minimumSidebarWidth, Number(width)));
+  document.documentElement.style.setProperty("--sidebar-width", `${next}px`);
+  $("sidebar-resizer").setAttribute("aria-valuemax", String(maximum));
+  $("sidebar-resizer").setAttribute("aria-valuenow", String(next));
+  if (persist) storage.set("chatai-sidebar-width", String(next));
+  positionOpenPanel();
+}
+function initializeSidebarResizer() {
+  const resizer = $("sidebar-resizer");
+  const savedWidth = Number(storage.get("chatai-sidebar-width"));
+  setSidebarWidth(
+    Number.isFinite(savedWidth) && savedWidth > 0
+      ? savedWidth
+      : defaultSidebarWidth,
+  );
+
+  const finishResize = (event) => {
+    if (!document.body.classList.contains("resizing-sidebar")) return;
+    document.body.classList.remove("resizing-sidebar");
+    if (resizer.hasPointerCapture?.(event.pointerId))
+      resizer.releasePointerCapture(event.pointerId);
+    storage.set(
+      "chatai-sidebar-width",
+      String(parseInt(resizer.getAttribute("aria-valuenow"), 10)),
+    );
+  };
+
+  resizer.addEventListener("pointerdown", (event) => {
+    if (matchMedia("(max-width:760px)").matches || event.button !== 0) return;
+    event.preventDefault();
+    document.body.classList.add("resizing-sidebar");
+    resizer.setPointerCapture(event.pointerId);
+    setSidebarWidth(event.clientX);
+  });
+  resizer.addEventListener("pointermove", (event) => {
+    if (!document.body.classList.contains("resizing-sidebar")) return;
+    setSidebarWidth(event.clientX);
+  });
+  resizer.addEventListener("pointerup", finishResize);
+  resizer.addEventListener("pointercancel", finishResize);
+  resizer.addEventListener("dblclick", () => {
+    setSidebarWidth(defaultSidebarWidth, true);
+  });
+  resizer.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const current = Number(resizer.getAttribute("aria-valuenow"));
+    setSidebarWidth(current + (event.key === "ArrowLeft" ? -10 : 10), true);
+  });
+  window.addEventListener("resize", () => {
+    if (matchMedia("(max-width:760px)").matches) return;
+    const storedWidth = Number(storage.get("chatai-sidebar-width"));
+    setSidebarWidth(
+      Number.isFinite(storedWidth) && storedWidth > 0
+        ? storedWidth
+        : Number(resizer.getAttribute("aria-valuenow")),
+    );
+  });
+}
+function cancelPanelClosure(panel) {
+  const closure = panelClosures.get(panel);
+  if (!closure) return;
+  clearTimeout(closure.fallback);
+  panel.removeEventListener("transitionend", closure.onTransitionEnd);
+  panelClosures.delete(panel);
+}
+function hidePanel(panel, immediate = false) {
+  cancelPanelClosure(panel);
+  if (panel.hidden) return;
+
+  const finish = () => {
+    const closure = panelClosures.get(panel);
+    if (!immediate && (!closure || closure.finish !== finish)) return;
+    cancelPanelClosure(panel);
+    panel.hidden = true;
+    panel.classList.remove("popover-visible", "popover-closing");
+  };
+
+  if (immediate || reducedMotion.matches) {
+    panel.hidden = true;
+    panel.classList.remove("popover-visible", "popover-closing");
+    return;
+  }
+
+  const onTransitionEnd = (event) => {
+    if (event.target === panel && event.propertyName === "opacity") finish();
+  };
+  panel.classList.remove("popover-visible");
+  panel.classList.add("popover-closing");
+  panel.addEventListener("transitionend", onTransitionEnd);
+  const fallback = setTimeout(finish, 240);
+  panelClosures.set(panel, { fallback, finish, onTransitionEnd });
+}
+function closePanel(immediate = false) {
+  hidePanel($("model-panel"), immediate);
+  hidePanel($("model-list-panel"), immediate);
   $("model-toggle").setAttribute("aria-expanded", "false");
+  $("model-picker").setAttribute("aria-expanded", "false");
+}
+function effectiveConfig() {
+  if (state.current)
+    return (
+      state.configs.get(state.model) ||
+      state.modelConfigs.get(state.model) ||
+      defaults
+    );
+  return (
+    state.draftConfig || state.modelConfigs.get(state.model) || defaults
+  );
+}
+function effortLabel(value) {
+  return { low: "低", high: "中", max: "高" }[value] || "中";
+}
+function updateModelControl(config = effectiveConfig()) {
+  const name = state.model || "选择模型";
+  $("model-label").textContent = name;
+  $("panel-model-label").textContent = name;
+  $("effort-label").textContent = config.think
+    ? effortLabel(config.reasoning_effort)
+    : "关闭";
+}
+function syncThinkToggle() {
+  const enabled = $("think").checked;
+  const toggle = $("think-toggle");
+  toggle.setAttribute("aria-pressed", String(enabled));
+  toggle.setAttribute("aria-label", enabled ? "关闭思考模式" : "开启思考模式");
+  toggle.title = enabled ? "思考模式已开启" : "思考模式已关闭";
+  $("parameters")
+    .querySelector(".effort-fieldset")
+    .classList.toggle("thinking-disabled", !enabled);
+}
+function setAdvancedExpanded(expanded, animate = true) {
+  const toggle = $("advanced-toggle");
+  const content = $("advanced-content");
+  const wasHidden = content.hidden;
+  const currentHeight = wasHidden ? 0 : content.getBoundingClientRect().height;
+  const currentStyle = wasHidden ? null : getComputedStyle(content);
+  const startOpacity = currentStyle ? Number(currentStyle.opacity) : 0;
+  const startTransform =
+    currentStyle && currentStyle.transform !== "none"
+      ? currentStyle.transform
+      : expanded
+        ? "translateY(-4px)"
+        : "translateY(0)";
+
+  advancedAnimation?.cancel();
+  advancedAnimation = null;
+  content.hidden = false;
+  const targetHeight = expanded ? content.scrollHeight : 0;
+  toggle.setAttribute("aria-expanded", String(expanded));
+  content.classList.toggle("is-open", expanded);
+
+  if (!animate || reducedMotion.matches || typeof content.animate !== "function") {
+    content.hidden = !expanded;
+    positionOpenPanel();
+    return;
+  }
+
+  const animation = content.animate(
+    [
+      {
+        height: `${currentHeight}px`,
+        opacity: startOpacity,
+        transform: startTransform,
+      },
+      {
+        height: `${targetHeight}px`,
+        opacity: expanded ? 1 : 0,
+        transform: expanded ? "translateY(0)" : "translateY(-4px)",
+      },
+    ],
+    {
+      duration: 240,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      fill: "both",
+    },
+  );
+  advancedAnimation = animation;
+  animation.onfinish = () => {
+    if (advancedAnimation !== animation) return;
+    advancedAnimation = null;
+    content.hidden = !expanded;
+    animation.cancel();
+    positionOpenPanel();
+  };
+}
+function positionPopover(panel) {
+  if (panel.hidden) return;
+  const anchor = $("model-toggle");
+  const anchorRect = anchor.getBoundingClientRect();
+  const viewportWidth = document.documentElement.clientWidth;
+  const viewportHeight = document.documentElement.clientHeight;
+  const margin = viewportWidth <= 760 ? 10 : 12;
+  const gap = 8;
+  const preferredWidth = panel.id === "model-list-panel" ? 306 : 312;
+  const width = Math.min(preferredWidth, viewportWidth - margin * 2);
+
+  panel.style.width = `${width}px`;
+  panel.style.left = `${Math.round(
+    Math.min(
+      Math.max(anchorRect.right - width, margin),
+      viewportWidth - width - margin,
+    ),
+  )}px`;
+
+  const panelHeight = panel.offsetHeight;
+  const above = anchorRect.top - gap - panelHeight;
+  const below = anchorRect.bottom + gap;
+  const top =
+    above >= margin
+      ? above
+      : Math.min(Math.max(below, margin), viewportHeight - panelHeight - margin);
+  const boundedTop = Math.max(margin, top);
+  panel.style.top = `${Math.round(boundedTop)}px`;
+  panel.dataset.placement = boundedTop < anchorRect.top ? "above" : "below";
+}
+function positionOpenPanel() {
+  const panel = $("model-list-panel").hidden
+    ? $("model-panel")
+    : $("model-list-panel");
+  positionPopover(panel);
+}
+function openPanel(panel) {
+  closePanel(true);
+  cancelPanelClosure(panel);
+  panel.classList.remove("popover-visible", "popover-closing");
+  panel.hidden = false;
+  $("model-toggle").setAttribute("aria-expanded", "true");
+  if (panel.id === "model-list-panel")
+    $("model-picker").setAttribute("aria-expanded", "true");
+  positionPopover(panel);
+  // 先提交初始状态，确保浏览器播放进入过渡而不是直接显示终态。
+  void panel.offsetWidth;
+  panel.classList.add("popover-visible");
+}
+function renderModelOptions() {
+  const models = state.models;
+  const hasSelectedModel = models.some((model) => model.name === state.model);
+  $("model-options").replaceChildren();
+  $("model-empty").hidden = Boolean(models.length);
+
+  for (const [index, model] of models.entries()) {
+    const selected = model.name === state.model;
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "model-option";
+    option.dataset.model = model.name;
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", String(selected));
+    option.tabIndex = selected || (!hasSelectedModel && index === 0) ? 0 : -1;
+
+    const name = document.createElement("strong");
+    name.className = "model-option-name";
+    name.textContent = model.name;
+    const check = document.createElement("span");
+    check.className = "model-option-check";
+    check.textContent = "✓";
+    check.setAttribute("aria-hidden", "true");
+    option.append(name, check);
+    option.onclick = () => changeModel(model.name);
+    $("model-options").append(option);
+  }
+  controls();
+}
+function changeModel(model) {
+  if (!model || state.busy) return;
+  if (model === state.model) {
+    closePanel();
+    return;
+  }
+  const old = state.model;
+  action("切换模型…", async () => {
+    try {
+      if (state.current) {
+        await api("/api/session/model", "POST", {
+          session_id: state.current,
+          model,
+        });
+        current().model = model;
+      }
+      state.model = model;
+      state.draftConfig = null;
+      updateHeader();
+      renderSessions();
+      configPanel();
+      closePanel();
+    } catch (error) {
+      state.model = old;
+      renderModelOptions();
+      throw error;
+    }
+  });
 }
 function renderSessions() {
   const query = $("search").value.trim().toLowerCase();
@@ -362,22 +787,29 @@ function updateHeader() {
   $("context-text").textContent = currentTitle;
   $("rename-title").hidden = !state.current;
   $("rename-title").title = state.current ? "更改会话名" : "请先打开一个会话";
-  $("model-label").textContent = state.model || "选择模型";
-  $("model").value = state.model;
+  updateModelControl();
+  renderModelOptions();
 }
 function cacheSessionConfigs() {
   for (const session of state.sessions) {
     const config = session.model_config;
     if (!config || !session.model) continue;
-    state.configs.set(session.model, {
-      ...config,
-      max_tokens: Number(config.max_tokens),
-    });
+    const normalized = normalizeModelConfig(config);
+    if (normalized) state.configs.set(session.model, normalized);
+  }
+}
+function cacheModelConfigs() {
+  state.modelConfigs.clear();
+  for (const model of state.models) {
+    if (!model?.name) continue;
+    const normalized = normalizeModelConfig(model.config);
+    if (normalized) state.modelConfigs.set(model.name, normalized);
   }
 }
 async function refreshSessions() {
   state.sessions = list(await api("/api/sessions"));
   if (state.current && !current()) home();
+  state.configs.clear();
   cacheSessionConfigs();
   updateHeader();
   renderSessions();
@@ -442,7 +874,7 @@ function openName(session = null) {
 }
 async function createSession(name = "new session") {
   if (!state.model) throw new Error("请先选择可用模型");
-  const config = state.draftConfig || state.configs.get(state.model) || defaults;
+  const config = effectiveConfig();
   const data = await api("/api/session", "POST", {
     model: {
       model_name: state.model,
@@ -464,7 +896,10 @@ async function createSession(name = "new session") {
   state.sessions.unshift(session);
   state.current = session.session_id;
   state.model = createdModel;
-  state.configs.set(createdModel, data.model || config);
+  state.configs.set(
+    createdModel,
+    normalizeModelConfig(data.model) || config,
+  );
   state.draftConfig = null;
   $("messages").replaceChildren();
   $("welcome").hidden = false;
@@ -898,24 +1333,26 @@ function resize() {
   $("count").textContent = $("message").value.length
     ? $("message").value.length + " / 12000"
     : "";
+  positionOpenPanel();
   controls();
 }
 function configPanel() {
-  const cached = state.current
-    ? state.configs.get(state.model)
-    : state.draftConfig || state.configs.get(state.model);
-  const config = cached || defaults;
+  const customized = state.current
+    ? state.configs.has(state.model)
+    : Boolean(state.draftConfig);
+  const config = effectiveConfig();
   $("temperature").value = config.temperature;
   $("tokens").value = config.max_tokens;
   $("think").checked = config.think;
   document.querySelectorAll("[name=effort]").forEach((input) => {
     input.checked = input.value === config.reasoning_effort;
   });
-  $("model-desc").textContent =
-    state.models.find((m) => m.name === state.model)?.desc || "";
-  $("config-note").textContent = cached
+  syncThinkToggle();
+  updateModelControl(config);
+  renderModelOptions();
+  $("config-note").textContent = customized
     ? "参数应用于同名模型。"
-    : "当前显示建议值；点击应用后生效，影响同名模型。";
+    : "当前显示模型建议值；点击应用后生效，影响同名模型。";
 }
 function normalizeUser(data) {
   const user = data?.user || data;
@@ -924,8 +1361,15 @@ function normalizeUser(data) {
 function avatarUrl(path) {
   if (!path) return "./images/avatar.png";
   if (/^(?:https?:|data:)/i.test(path)) return path;
-  if (!state.base) return path;
-  return state.base + (path.startsWith("/") ? path : "/" + path);
+  // SDK 保存的是磁盘路径；浏览器访问时需要去掉静态资源根目录 ./www。
+  const publicPath = path.startsWith("./www/") ? path.slice(5) : path;
+  const url = state.base
+    ? state.base +
+      (publicPath.startsWith("/") ? publicPath : "/" + publicPath)
+    : publicPath;
+  if (!state.avatarRevision) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}avatar_v=${state.avatarRevision}`;
 }
 function updateUserUI() {
   if (!state.user) return;
@@ -949,15 +1393,18 @@ function resetChatState() {
   state.model = "";
   state.menu = "";
   state.rename = null;
+  state.avatarRevision = 0;
   state.deletion = null;
   state.configs.clear();
+  state.modelConfigs.clear();
   state.drafts.clear();
   state.draftConfig = null;
-  $("model").replaceChildren();
+  $("model-options").replaceChildren();
   $("messages").replaceChildren();
   $("message").value = "";
   $("welcome").hidden = false;
   $("history-error").hidden = true;
+  closePanel(true);
   updateHeader();
   renderSessions();
   resize();
@@ -974,6 +1421,7 @@ function setAuthMode(mode) {
   $("auth-subtitle").textContent = registering
     ? "几步即可开始新的对话"
     : "登录后继续你的对话";
+  hideAllPasswords($(registering ? "register-form" : "login-form"));
   $(registering ? "register-name" : "login-email").focus();
 }
 function resetCodeButton(id) {
@@ -1131,13 +1579,13 @@ async function connect() {
       api("/api/sessions"),
     ]);
     state.models = list(models);
+    cacheModelConfigs();
     state.sessions = list(sessions);
+    state.configs.clear();
     cacheSessionConfigs();
-    $("model").replaceChildren(
-      ...state.models.map((m) => new Option(m.name, m.name)),
-    );
     if (!state.models.some((m) => m.name === state.model))
       state.model = state.models[0]?.name || "";
+    renderModelOptions();
     connection(true, "已连接");
     updateHeader();
     renderSessions();
@@ -1297,6 +1745,48 @@ $("user-menu").onclick = () => {
   updateUserUI();
   openDialog("account-dialog");
 };
+$("avatar-upload").onclick = () => {
+  if (state.busy) return;
+  $("avatar-file").value = "";
+  $("avatar-file").click();
+};
+$("avatar-file").onchange = () => {
+  const file = $("avatar-file").files?.[0];
+  $("avatar-file").value = "";
+  if (!file) return;
+  if (!supportedAvatarTypes.has(file.type)) {
+    toast("头像仅支持 PNG 或 JPEG 格式");
+    return;
+  }
+  if (!file.size) {
+    toast("不能上传空图片");
+    return;
+  }
+  if (file.size > maximumAvatarBytes) {
+    toast("头像大小不能超过 5MB");
+    return;
+  }
+  openAvatarConfirmation(file);
+};
+$("avatar-confirm-form").onsubmit = (event) => {
+  event.preventDefault();
+  const file = state.pendingAvatarFile;
+  if (!file) {
+    closeDialog("avatar-confirm-dialog");
+    return;
+  }
+  action("上传头像…", async () => {
+    await uploadAvatar(file);
+    const user = normalizeUser(await api("/api/auth/info"));
+    if (!user) throw new Error("头像已上传，但用户信息刷新失败，请刷新页面");
+    state.user = user;
+    // 后端复用同一头像 URL，增加版本参数以绕过浏览器旧缓存。
+    state.avatarRevision = Date.now();
+    updateUserUI();
+    closeDialog("avatar-confirm-dialog");
+    toast("头像已更新");
+  });
+};
 $("new-chat").onclick = home;
 $("name-new").onclick = () => openName();
 $("rename-title").onclick = () => state.current && openName(current());
@@ -1359,34 +1849,42 @@ $("confirm-form").onsubmit = (event) => {
   });
 };
 $("model-toggle").onclick = () => {
-  const open = $("model-panel").hidden;
-  $("model-panel").hidden = !open;
-  $("model-toggle").setAttribute("aria-expanded", String(open));
-  if (open) configPanel();
+  if ($("model-panel").classList.contains("popover-visible")) {
+    closePanel();
+    return;
+  }
+  configPanel();
+  openPanel($("model-panel"));
 };
-$("close-model").onclick = closePanel;
-$("model").onchange = () => {
-  const model = $("model").value,
-    old = state.model;
-  action("切换模型…", async () => {
-    try {
-      if (state.current) {
-        await api("/api/session/model", "POST", {
-          session_id: state.current,
-          model,
-        });
-        current().model = model;
-      }
-      state.model = model;
-      state.draftConfig = null;
-      updateHeader();
-      renderSessions();
-      configPanel();
-    } catch (error) {
-      $("model").value = old;
-      throw error;
-    }
-  });
+$("model-picker").onclick = () => {
+  renderModelOptions();
+  openPanel($("model-list-panel"));
+  $("model-options")
+    .querySelector('[aria-selected="true"], .model-option')
+    ?.focus();
+};
+$("reset-parameters").onclick = () => {
+  configPanel();
+  positionOpenPanel();
+};
+$("think-toggle").onclick = () => {
+  $("think").checked = !$("think").checked;
+  syncThinkToggle();
+};
+$("model-options").onkeydown = (event) => {
+  const option = event.target.closest(".model-option");
+  if (!option) return;
+  const options = [...$("model-options").querySelectorAll(".model-option")];
+  const index = options.indexOf(option);
+  let next = null;
+  if (event.key === "ArrowDown") next = options[(index + 1) % options.length];
+  if (event.key === "ArrowUp")
+    next = options[(index - 1 + options.length) % options.length];
+  if (event.key === "Home") next = options[0];
+  if (event.key === "End") next = options[options.length - 1];
+  if (!next) return;
+  event.preventDefault();
+  next.focus();
 };
 $("parameters").onsubmit = (event) => {
   event.preventDefault();
@@ -1414,6 +1912,7 @@ $("parameters").onsubmit = (event) => {
       });
       state.configs.set(state.model, config);
     } else state.draftConfig = config;
+    updateModelControl(config);
     closePanel();
     toast(state.current ? "参数已应用" : "参数将在创建会话时应用");
   });
@@ -1451,9 +1950,10 @@ $("connection-form").onsubmit = (event) => {
     storage.set("chatserver-api-base", base);
     state.models = [];
     state.model = "";
-    $("model").replaceChildren();
+    $("model-options").replaceChildren();
     state.sessions = [];
     state.configs.clear();
+    state.modelConfigs.clear();
     state.drafts.clear();
     state.draftConfig = null;
     $("message").value = "";
@@ -1582,6 +2082,7 @@ $("verification-dialog").addEventListener("close", () => {
   $("verification-status").textContent = "";
   resetCodeButton("verification-send-code");
 });
+$("avatar-confirm-dialog").addEventListener("close", clearPendingAvatar);
 for (const [id, close] of [
   ["change-email-dialog", () => closeAccountChangeDialog("change-email-dialog")],
   [
@@ -1620,10 +2121,24 @@ document.addEventListener("click", (event) => {
   if (
     !state.busy &&
     !$("model-panel").contains(event.target) &&
+    !$("model-list-panel").contains(event.target) &&
     !$("model-toggle").contains(event.target)
   )
     closePanel();
 });
+window.addEventListener("resize", positionOpenPanel);
+window.addEventListener("scroll", positionOpenPanel, true);
+const popoverResizeObserver =
+  typeof ResizeObserver === "function"
+    ? new ResizeObserver(() => positionOpenPanel())
+    : null;
+popoverResizeObserver?.observe($("model-panel"));
+popoverResizeObserver?.observe($("model-list-panel"));
+$("advanced-toggle").onclick = () => {
+  setAdvancedExpanded(
+    $("advanced-toggle").getAttribute("aria-expanded") !== "true",
+  );
+};
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     if (!state.busy) closePanel();
@@ -1638,5 +2153,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 theme(storage.get("chatserver-appearance") === "dark" ? "dark" : "light");
+initializePasswordToggles();
+initializeSidebarResizer();
 resize();
 bootstrap();

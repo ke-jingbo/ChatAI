@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
     <title>ChatAI</title>
-    <link rel="stylesheet" href="./styles.css?v=20260926-7" />
-    <script src="./app.js?v=20260926-7" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=20260927-18" />
+    <script src="./app.js?v=20260927-18" defer></script>
   </head>
   <body class="auth-pending">
     <section id="auth-view" aria-labelledby="auth-title">
@@ -190,6 +190,17 @@
         ></button>
       </footer>
     </aside>
+    <div
+      id="sidebar-resizer"
+      role="separator"
+      tabindex="0"
+      aria-label="调整侧栏宽度"
+      aria-orientation="vertical"
+      aria-valuemin="220"
+      aria-valuemax="420"
+      aria-valuenow="258"
+      title="拖动调整侧栏宽度，双击恢复默认宽度"
+    ></div>
     <button id="backdrop" aria-label="关闭侧栏" hidden></button>
     <main>
       <header class="topbar">
@@ -254,8 +265,10 @@
                 type="button"
                 aria-expanded="false"
                 aria-controls="model-panel"
+                aria-haspopup="dialog"
               >
                 <span id="model-label">选择模型</span
+                ><span id="effort-label" class="effort-label">中</span
                 ><span class="chevron">⌄</span>
               </button>
               <button
@@ -270,45 +283,83 @@
             </div>
           </div>
         </form>
-        <section id="model-panel" hidden aria-label="模型与参数">
-          <div class="popover-heading">
-            <span data-icon="sliders"></span><strong>模型与参数</strong
-            ><button
-              id="close-model"
-              class="icon"
-              aria-label="关闭参数面板"
-              data-icon="close"
-            ></button>
+        <p class="composer-hint">
+          <span id="send-state">Enter 发送 · Shift + Enter 换行</span
+          ><span id="count"></span>
+        </p>
+      </div>
+    </main>
+    <section
+      id="model-panel"
+      class="composer-popover"
+      hidden
+      aria-label="模型参数"
+    >
+      <div class="config-quick-row">
+        <button
+          id="think-toggle"
+          type="button"
+          class="think-toggle"
+          aria-label="关闭思考模式"
+          aria-pressed="true"
+          title="思考模式已开启"
+          data-icon="bolt"
+        ></button>
+        <button
+          id="model-picker"
+          type="button"
+          aria-expanded="false"
+          aria-controls="model-list-panel"
+          aria-haspopup="listbox"
+        >
+          <span id="panel-model-label">选择模型</span
+          ><span class="picker-arrow" aria-hidden="true">›</span>
+        </button>
+        <button
+          id="reset-parameters"
+          type="button"
+          class="icon"
+          aria-label="恢复当前参数"
+          title="恢复当前参数"
+          data-icon="refresh"
+        ></button>
+      </div>
+      <form id="parameters">
+        <input id="think" type="checkbox" checked hidden />
+        <fieldset class="effort-fieldset">
+          <legend class="sr-only">思考强度</legend>
+          <div class="efforts">
+            <label
+              ><input type="radio" name="effort" value="low" /><span
+                >低</span
+              ></label
+            ><label
+              ><input
+                type="radio"
+                name="effort"
+                value="high"
+                checked
+              /><span>中</span></label
+            ><label
+              ><input type="radio" name="effort" value="max" /><span
+                >高</span
+              ></label
+            >
           </div>
-          <label class="field">模型<select id="model"></select></label>
-          <p id="model-desc" class="note"></p>
-          <form id="parameters">
-            <fieldset>
-              <legend>思考强度</legend>
-              <div class="efforts">
-                <label
-                  ><input type="radio" name="effort" value="low" /><span
-                    >low</span
-                  ></label
-                ><label
-                  ><input
-                    type="radio"
-                    name="effort"
-                    value="high"
-                    checked
-                  /><span>high</span></label
-                ><label
-                  ><input type="radio" name="effort" value="max" /><span
-                    >max</span
-                  ></label
-                >
-              </div>
-            </fieldset>
-            <label class="think-row"
-              >思考模式<input id="think" type="checkbox" checked
-            /></label>
-            <details>
-              <summary>更多参数</summary>
+        </fieldset>
+        <div class="advanced-parameters">
+          <button
+            id="advanced-toggle"
+            class="advanced-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="advanced-content"
+          >
+            <span class="advanced-caret" aria-hidden="true"></span
+            ><span>更多参数</span>
+          </button>
+          <div id="advanced-content" class="advanced-content" hidden>
+            <div class="advanced-inner">
               <div class="parameter-grid">
                 <label class="field"
                   >Temperature<input
@@ -330,17 +381,28 @@
                     required
                 /></label>
               </div>
-            </details>
-            <p id="config-note" class="note">参数应用于同名模型。</p>
-            <button class="primary apply" type="submit">应用参数</button>
-          </form>
-        </section>
-        <p class="composer-hint">
-          <span id="send-state">Enter 发送 · Shift + Enter 换行</span
-          ><span id="count"></span>
-        </p>
-      </div>
-    </main>
+            </div>
+          </div>
+        </div>
+        <p id="config-note" class="note">参数应用于同名模型。</p>
+        <button class="primary apply" type="submit">应用参数</button>
+      </form>
+    </section>
+    <section
+      id="model-list-panel"
+      class="composer-popover model-list-panel"
+      hidden
+      aria-label="选择模型"
+    >
+      <div class="model-list-heading">选择模型</div>
+      <div
+        id="model-options"
+        class="model-options"
+        role="listbox"
+        aria-label="选择模型"
+      ></div>
+      <p id="model-empty" class="model-empty" hidden>暂无可用模型</p>
+    </section>
     <dialog id="name-dialog" aria-labelledby="name-title">
       <form id="name-form">
         <header>
@@ -379,6 +441,23 @@
           ><button id="confirm-submit" type="submit" class="danger">
             删除
           </button>
+        </footer>
+      </form>
+    </dialog>
+    <dialog id="avatar-confirm-dialog" aria-labelledby="avatar-confirm-title">
+      <form id="avatar-confirm-form">
+        <h2 id="avatar-confirm-title">确认更换头像？</h2>
+        <div class="avatar-confirm-preview">
+          <img id="avatar-preview" alt="新头像预览" />
+          <div>
+            <strong id="avatar-confirm-name"></strong>
+            <span id="avatar-confirm-size"></span>
+          </div>
+        </div>
+        <p class="note">确认后，新头像将立即应用到当前账号。</p>
+        <footer>
+          <button type="button" class="secondary" data-close>取消</button
+          ><button type="submit" class="primary">确认更换</button>
         </footer>
       </form>
     </dialog>
@@ -491,7 +570,22 @@
         ></button>
       </header>
       <div class="account-summary">
-        <img id="account-avatar" src="./images/avatar.png" alt="" />
+        <button
+          id="avatar-upload"
+          class="avatar-upload"
+          type="button"
+          aria-label="更换头像"
+          title="更换头像"
+        >
+          <img id="account-avatar" src="./images/avatar.png" alt="" />
+          <span aria-hidden="true">更换</span>
+        </button>
+        <input
+          id="avatar-file"
+          type="file"
+          accept="image/png,image/jpeg,.png,.jpg,.jpeg"
+          hidden
+        />
         <div>
           <strong id="account-name">用户</strong>
           <span id="account-email">未设置邮箱</span>

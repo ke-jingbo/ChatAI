@@ -371,12 +371,42 @@ namespace ai_chat_server {
     // 更改用户头像
     // POST /api/user/avatar
     void ChatServer::ChangeUserAvatar(const httplib::Request& req, httplib::Response& res) {
-    //     std::string user_id = GetUserId(req);
-    //     if(user_id.empty()) {
-    //         ERR("ChatServer::ChangeUserAvatar() user_id is empty");
-    //         BuildERRResponse(res, 401, "user_id is empty");
-    //         return;
-    //     }
+        std::string user_id = GetUserId(req);
+        if(user_id.empty()) {
+            ERR("ChatServer::ChangeUserAvatar() user_id is empty");
+            BuildERRResponse(res, 401, "user_id is empty");
+            return;
+        }
+        if(!req.has_header("Content-Type") 
+            || (req.get_header_value("Content-Type") != "image/png" 
+            && req.get_header_value("Content-Type") != "image/jpeg")) {
+            ERR("ChatServer::ChangeUserAvatar() Content-Type is not image/png or image/jpeg");
+            BuildERRResponse(res, 400, "Content-Type is not image/png or image/jpeg");
+            return;
+        }
+        std::string mime = (req.get_header_value("Content-Type")=="image/png")?"png":"jpeg";
+        if(req.body.size() > 1024 * 1024 * 5) {
+            ERR("ChatServer::ChangeUserAvatar() avatar size is too large");
+            BuildERRResponse(res, 400, "avatar size is too large");
+            return;
+        }
+        std::string avatar_path = "./www/images/avatar_" + user_id + "." + mime;
+        // 更新用户头像
+        if(!_chat_sdk.UpdateUserAvatar(user_id, avatar_path, std::make_shared<std::string>(req.body))) {
+            ERR("ChatServer::ChangeUserAvatar() update user avatar failed");
+            BuildERRResponse(res, 500, "update user avatar failed");
+            return;
+        }
+        // 更新成功
+        Json::Value response_obj;
+        response_obj["success"] = true;
+        response_obj["message"] = "change user avatar success";
+        Json::StreamWriterBuilder builder;
+        builder["indentation"] = "";
+        std::string response_str = Json::writeString(builder, response_obj);
+        res.set_content(response_str, "application/json");
+        res.status = 200;
+        INFO("ChangeUserAvatar() success: {}", user_id);
     }
     // 更改用户名称
     // POST /api/user/name
@@ -782,6 +812,12 @@ namespace ai_chat_server {
             Json::Value model_obj;
             model_obj["name"] = model._name;
             model_obj["desc"] = model._desc;
+            Json::Value model_config_obj;
+            model_config_obj["temperature"] = model._config._temperature;
+            model_config_obj["max_tokens"] = model._config._max_tokens;
+            model_config_obj["think"] = model._config._think;
+            model_config_obj["reasoning_effort"] = model._config._reasoning_effort;
+            model_obj["config"] = model_config_obj;
             data_obj.append(model_obj);
         }
         response_obj["data"] = data_obj;
@@ -1121,10 +1157,10 @@ namespace ai_chat_server {
             [this](const httplib::Request& req, httplib::Response& res) {
                 GetUserInfo(req, res);
         });
-        // _server.Post("/api/user/avatar", 
-        //     [this](const httplib::Request& req, httplib::Response& res) {
-        //         ChangeUserAvatar(req, res);
-        // });
+        _server.Post("/api/user/avatar", 
+            [this](const httplib::Request& req, httplib::Response& res) {
+                ChangeUserAvatar(req, res);
+        });
         _server.Post("/api/user/name", 
             [this](const httplib::Request& req, httplib::Response& res) {
                 ChangeUserName(req, res);
