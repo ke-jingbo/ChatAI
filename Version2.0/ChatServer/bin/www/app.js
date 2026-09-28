@@ -1041,6 +1041,103 @@ function appendCodeBlock(target, codeText, info, closed) {
   target.append(block);
 }
 
+function splitTableRow(line) {
+  const source = String(line).trim();
+  if (!source.includes("|")) return null;
+
+  const cells = [];
+  let cell = "";
+  let inCode = false;
+  let hasSeparator = false;
+  const start = source.startsWith("|") ? 1 : 0;
+  let end = source.length;
+
+  // A trailing pipe closes the row unless it is escaped as part of the cell.
+  if (source.endsWith("|")) {
+    let backslashes = 0;
+    for (
+      let index = source.length - 2;
+      index >= 0 && source[index] === "\\";
+      index -= 1
+    )
+      backslashes += 1;
+    if (backslashes % 2 === 0) end -= 1;
+  }
+
+  for (let index = start; index < end; index += 1) {
+    const character = source[index];
+    if (character === "\\" && source[index + 1] === "|") {
+      cell += "|";
+      index += 1;
+    } else if (character === "`") {
+      inCode = !inCode;
+      cell += character;
+    } else if (character === "|" && !inCode) {
+      cells.push(cell.trim());
+      cell = "";
+      hasSeparator = true;
+    } else {
+      cell += character;
+    }
+  }
+  cells.push(cell.trim());
+  return hasSeparator || source.startsWith("|") || end < source.length
+    ? cells
+    : null;
+}
+
+function tableAt(lines, index) {
+  if (index + 1 >= lines.length) return null;
+  const headers = splitTableRow(lines[index]);
+  const delimiters = splitTableRow(lines[index + 1]);
+  if (!headers || !delimiters || headers.length !== delimiters.length)
+    return null;
+
+  const alignments = delimiters.map((cell) => {
+    const marker = cell.replace(/\s+/g, "");
+    if (!/^:?-{3,}:?$/.test(marker)) return null;
+    if (marker.startsWith(":") && marker.endsWith(":")) return "center";
+    if (marker.endsWith(":")) return "right";
+    return "left";
+  });
+  return alignments.every(Boolean) ? { headers, alignments } : null;
+}
+
+function appendTable(target, headers, alignments, rows) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "markdown-table-wrap";
+  const table = document.createElement("table");
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+
+  headers.forEach((value, index) => {
+    const cell = document.createElement("th");
+    cell.className = "align-" + alignments[index];
+    inline(cell, value);
+    headRow.append(cell);
+  });
+  head.append(headRow);
+  table.append(head);
+
+  if (rows.length) {
+    const body = document.createElement("tbody");
+    rows.forEach((values) => {
+      const row = document.createElement("tr");
+      alignments.forEach((alignment, index) => {
+        const cell = document.createElement("td");
+        cell.className = "align-" + alignment;
+        inline(cell, values[index] || "");
+        row.append(cell);
+      });
+      body.append(row);
+    });
+    table.append(body);
+  }
+
+  wrapper.append(table);
+  target.append(wrapper);
+}
+
 function markdown(target, text) {
   target.replaceChildren();
   const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
@@ -1087,6 +1184,20 @@ function markdown(target, text) {
       inline(element, heading[2].replace(/\s+#+\s*$/, ""));
       target.append(element);
       index += 1;
+      continue;
+    }
+
+    const table = tableAt(lines, index);
+    if (table) {
+      const rows = [];
+      index += 2;
+      while (index < lines.length && lines[index].trim()) {
+        const cells = splitTableRow(lines[index]);
+        if (!cells) break;
+        rows.push(cells.slice(0, table.headers.length));
+        index += 1;
+      }
+      appendTable(target, table.headers, table.alignments, rows);
       continue;
     }
 

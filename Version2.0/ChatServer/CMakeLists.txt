@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # 模式
-set(CMAKE_BUILD_TYPE "DEBUG")
+set(CMAKE_BUILD_TYPE "Release")
 
 # 查找 ChatServer 及 SDK 所需的第三方依赖。
 find_package(OpenSSL REQUIRED)
