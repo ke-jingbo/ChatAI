@@ -504,7 +504,21 @@ namespace ai_chat_sdk {
     bool DataManager::ClearAllSession(const std::string &user_id) {
         std::lock_guard<std::mutex> lock(_mutex);
         const char *sql = R"(delete from sessions where user_id = ?)";
-        if(!SqlExec(sql)) return false;
+        sqlite3_stmt *stmt;
+        int rc = sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr);
+        if(rc != SQLITE_OK) {
+            ERR("ClearAllSession error: {}", sqlite3_errmsg(_db));
+            sqlite3_finalize(stmt);
+            return false;
+        }
+        sqlite3_bind_text(stmt, 1, user_id.c_str(), -1, SQLITE_TRANSIENT);
+        rc = sqlite3_step(stmt);
+        if(rc != SQLITE_DONE) {
+            ERR("ClearAllSession error: {}", sqlite3_errmsg(_db));
+            sqlite3_finalize(stmt);
+            return false;
+        }
+        rc = sqlite3_finalize(stmt);
         return true;
     }
 

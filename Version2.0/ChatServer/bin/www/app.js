@@ -1821,18 +1821,18 @@ $("register-form").onsubmit = (event) => {
   authAction("正在创建账号…", async () => {
     const email = $("register-email").value.trim();
     const password = $("register-password").value;
+    const code = $("register-code").value.trim();
     if (password !== $("register-confirm").value)
       throw new Error("两次输入的密码不一致");
-    await verifyEmailCode(
-      email,
-      "register",
-      $("register-code").value.trim(),
-    );
+    if (!/^\d{6}$/.test(code)) throw new Error("请输入六位邮箱验证码");
+    // 注册接口会原子地验证并消费验证码，不能提前调用通用验证接口。
     const user = normalizeUser(
       await api("/api/auth/register", "POST", {
         user_name: $("register-name").value.trim(),
         email,
         password,
+        code,
+        purpose: "register",
       }),
     );
     if (!user) throw new Error("注册响应缺少用户信息");

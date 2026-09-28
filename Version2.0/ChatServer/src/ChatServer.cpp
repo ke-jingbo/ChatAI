@@ -232,11 +232,15 @@ namespace ai_chat_server {
         std::string email;
         std::string user_name;
         std::string password;
+        std::string code;
+        std::string purpose = "register";
         std::string cookie_id = CreateCookieId();
         std::string user_avatar_path = "/images/avatar.png";
         if(!request_obj.isMember("email") || !request_obj["email"].isString()
             || !request_obj.isMember("user_name") || !request_obj["user_name"].isString()
-            || !request_obj.isMember("password") || !request_obj["password"].isString()) {
+            || !request_obj.isMember("password") || !request_obj["password"].isString()
+            || !request_obj.isMember("code") || !request_obj["code"].isString()
+            || !request_obj.isMember("purpose") || !request_obj["purpose"].isString()) {
             ERR("ChatServer::RegisterUser() parse request body failed");
             BuildERRResponse(res, 400, "parse request body failed");
             return;
@@ -244,6 +248,15 @@ namespace ai_chat_server {
         email = request_obj["email"].asString();
         user_name = request_obj["user_name"].asString();
         password = request_obj["password"].asString();
+        code = request_obj["code"].asString();
+        purpose = request_obj["purpose"].asString();
+        // 验证验证码
+        VerifyCodeResult result = _email_verification_service.VerifyCode(email, purpose, code);
+        if(result != VerifyCodeResult::Success) {
+            ERR("ChatServer::VerifyEmail() verify email verification code failed");
+            BuildERRResponse(res, 400, "verify email verification code failed");
+            return;
+        }
         // 注册用户
         if(_chat_sdk.CreateUser(user_name, user_avatar_path, email, password, cookie_id) == "") {
             ERR("ChatServer::RegisterUser() register user failed");
