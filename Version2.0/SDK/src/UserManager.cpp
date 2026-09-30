@@ -363,8 +363,12 @@ namespace ai_chat_sdk {
             _mutex.unlock();
             return;
         }
-        _mutex.unlock();
         _session_managers[user_id]->ClearAllSessions();
+        _mutex.unlock();
+        if(!_data_manager.ClearAllSession(user_id)) {
+            ERR("UserManager::ClearAllSessions() clear all sessions in database failed");
+            return;
+        }
     }
 
 }  // end namespace ai_chat_sdk
