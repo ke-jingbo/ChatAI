@@ -1,4 +1,0 @@
-/home/kjb/Code/ChatAI-SDK/ChatAI/Version2.0/Test/build/CMakeFiles/qq_smtp_test.dir
-/home/kjb/Code/ChatAI-SDK/ChatAI/Version2.0/Test/build/CMakeFiles/verification_code_test.dir
-/home/kjb/Code/ChatAI-SDK/ChatAI/Version2.0/Test/build/CMakeFiles/edit_cache.dir
-/home/kjb/Code/ChatAI-SDK/ChatAI/Version2.0/Test/build/CMakeFiles/rebuild_cache.dir

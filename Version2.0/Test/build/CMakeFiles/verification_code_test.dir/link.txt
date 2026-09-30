@@ -1,1 +1,0 @@
-/usr/bin/c++ -g CMakeFiles/verification_code_test.dir/VerificationCode.cpp.o CMakeFiles/verification_code_test.dir/VerificationCodeTest.cpp.o -o verification_code_test  /usr/lib/x86_64-linux-gnu/libcrypto.so 

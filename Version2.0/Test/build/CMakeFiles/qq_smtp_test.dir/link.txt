@@ -1,1 +1,0 @@
-/usr/bin/c++ -g CMakeFiles/qq_smtp_test.dir/QQSmtpTest.cpp.o CMakeFiles/qq_smtp_test.dir/VerificationCode.cpp.o -o qq_smtp_test  /usr/lib/x86_64-linux-gnu/libcrypto.so /usr/lib/x86_64-linux-gnu/libcurl.so 

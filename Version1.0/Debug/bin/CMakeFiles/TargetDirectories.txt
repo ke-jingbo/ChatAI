@@ -1,3 +1,0 @@
-/home/kjb/Code/ChatAI-SDK/ChatAI/Debug/bin/CMakeFiles/testLLM.dir
-/home/kjb/Code/ChatAI-SDK/ChatAI/Debug/bin/CMakeFiles/edit_cache.dir
-/home/kjb/Code/ChatAI-SDK/ChatAI/Debug/bin/CMakeFiles/rebuild_cache.dir
